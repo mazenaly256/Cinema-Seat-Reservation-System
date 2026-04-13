@@ -10,32 +10,30 @@
 
 ### Get all movies
 
-GET /api/movies?status=all
+`GET /api/movies`
 
-### Get movies that have upcoming showtimes
+Supports query parameters:
 
-GET /api/movies?status=now-showing
+- status (optional) → now-showing (have future upcoming showtimes)
+
+#### Examples
+
+`GET /api/movies` → get all movies on the system
+
+`GET /api/movies?status=now-showing` → get all movies that have upcoming showtimes
 
 ### Get movie by id
 
-GET /api/movies/{movieId}
+`GET /api/movies/{movieId}`
 
 ### Create a new movie
 
-POST /api/movies
+`POST /api/movies`
 
 ### Update a movie
 
-PUT /api/movies/{movieId}
+`PUT /api/movies/{movieId}`
 
 ### Delete a movie
 
-DELETE /api/movies/{movieId}
-
-### Get all showtimes for a movie
-
-GET /api/movies/{movieId}/showtimes
-
-### Get upcoming showtimes for a movie
-
-GET /api/movies/{movieId}/showtimes?status=upcoming
+`DELETE /api/movies/{movieId}`

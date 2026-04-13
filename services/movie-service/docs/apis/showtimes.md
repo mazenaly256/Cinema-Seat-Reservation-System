@@ -10,28 +10,35 @@
 
 ### Get all showtimes
 
-GET /api/showtimes
+`GET /api/showtimes`
 
-### Get upcoming showtimes
+Supports query parameters:
 
-GET /api/showtimes?status=upcoming
+- movieId (optional) → filter by movie
+- status (optional) → upcoming (its start time after the moment of querying)
+- from (optional)
+- to (optional)
 
-### Get showtimes by date and time range
+#### Examples
 
-GET /api/showtimes?from=2026-04-11T18:00:00&to=2026-04-11T18:00:00
+`GET /api/showtimes?status=upcoming`
+
+`GET /api/showtimes?from=2026-04-11T08:00:00&to=2026-04-11T20:00:00`
+
+`GET /api/showtimes?movieId=123&status=upcoming`
 
 ### Get showtime by id
 
-GET /api/showtimes/{showtimeId}
+`GET /api/showtimes/{showtimeId}`
 
-### Create a new showtime
+### Create a new showtime for a movie
 
-POST /api/showtimes
+`POST /api/showtimes`
 
 ### Update a showtime
 
-PUT /api/showtimes/{showtimeId}
+`PUT /api/showtimes/{showtimeId}`
 
 ### Delete a showtime
 
-DELETE /api/showtimes/{showtimeId}
+`DELETE /api/showtimes/{showtimeId}`
