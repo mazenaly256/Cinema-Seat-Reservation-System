@@ -12,7 +12,7 @@ using movie_service.Data;
 namespace movie_service.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260411072350_InitialCreate")]
+    [Migration("20260413123633_Initial-Create")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -201,6 +201,9 @@ namespace movie_service.Data.Migrations
                     b.Property<Guid>("MovieId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("datetime2");
 
@@ -216,6 +219,7 @@ namespace movie_service.Data.Migrations
                             Id = new Guid("30000000-0000-0000-0000-000000000001"),
                             EndTime = new DateTime(2026, 4, 11, 21, 0, 0, 0, DateTimeKind.Unspecified),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            Price = 30m,
                             StartTime = new DateTime(2026, 4, 11, 18, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
@@ -223,6 +227,7 @@ namespace movie_service.Data.Migrations
                             Id = new Guid("30000000-0000-0000-0000-000000000002"),
                             EndTime = new DateTime(2026, 4, 11, 23, 36, 0, 0, DateTimeKind.Unspecified),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000002"),
+                            Price = 35m,
                             StartTime = new DateTime(2026, 4, 11, 21, 30, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
@@ -230,6 +235,7 @@ namespace movie_service.Data.Migrations
                             Id = new Guid("30000000-0000-0000-0000-000000000003"),
                             EndTime = new DateTime(2026, 4, 12, 18, 28, 0, 0, DateTimeKind.Unspecified),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000003"),
+                            Price = 25m,
                             StartTime = new DateTime(2026, 4, 12, 16, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
@@ -237,6 +243,7 @@ namespace movie_service.Data.Migrations
                             Id = new Guid("30000000-0000-0000-0000-000000000004"),
                             EndTime = new DateTime(2026, 4, 12, 21, 56, 0, 0, DateTimeKind.Unspecified),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000004"),
+                            Price = 45m,
                             StartTime = new DateTime(2026, 4, 12, 19, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
@@ -244,6 +251,7 @@ namespace movie_service.Data.Migrations
                             Id = new Guid("30000000-0000-0000-0000-000000000005"),
                             EndTime = new DateTime(2026, 4, 13, 22, 49, 0, 0, DateTimeKind.Unspecified),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000005"),
+                            Price = 35m,
                             StartTime = new DateTime(2026, 4, 13, 20, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
@@ -251,6 +259,7 @@ namespace movie_service.Data.Migrations
                             Id = new Guid("30000000-0000-0000-0000-000000000006"),
                             EndTime = new DateTime(2026, 4, 11, 13, 0, 0, 0, DateTimeKind.Unspecified),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            Price = 40m,
                             StartTime = new DateTime(2026, 4, 11, 9, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
@@ -258,6 +267,7 @@ namespace movie_service.Data.Migrations
                             Id = new Guid("30000000-0000-0000-0000-000000000007"),
                             EndTime = new DateTime(2026, 4, 12, 14, 0, 0, 0, DateTimeKind.Unspecified),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            Price = 40m,
                             StartTime = new DateTime(2026, 4, 12, 10, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
@@ -265,6 +275,7 @@ namespace movie_service.Data.Migrations
                             Id = new Guid("30000000-0000-0000-0000-000000000008"),
                             EndTime = new DateTime(2026, 4, 13, 16, 36, 0, 0, DateTimeKind.Unspecified),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000002"),
+                            Price = 50m,
                             StartTime = new DateTime(2026, 4, 13, 14, 30, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
@@ -272,6 +283,7 @@ namespace movie_service.Data.Migrations
                             Id = new Guid("30000000-0000-0000-0000-000000000009"),
                             EndTime = new DateTime(2026, 4, 11, 17, 28, 0, 0, DateTimeKind.Unspecified),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000003"),
+                            Price = 45m,
                             StartTime = new DateTime(2026, 4, 11, 15, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
@@ -279,6 +291,7 @@ namespace movie_service.Data.Migrations
                             Id = new Guid("30000000-0000-0000-0000-000000000010"),
                             EndTime = new DateTime(2026, 4, 13, 13, 49, 0, 0, DateTimeKind.Unspecified),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000005"),
+                            Price = 35m,
                             StartTime = new DateTime(2026, 4, 13, 9, 0, 0, 0, DateTimeKind.Unspecified)
                         });
                 });

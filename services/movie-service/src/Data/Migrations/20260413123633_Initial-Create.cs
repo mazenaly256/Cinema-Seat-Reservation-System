@@ -69,7 +69,8 @@ namespace movie_service.Data.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWSEQUENTIALID()"),
                     MovieId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     StartTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EndTime = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    EndTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -125,19 +126,19 @@ namespace movie_service.Data.Migrations
 
             migrationBuilder.InsertData(
                 table: "Showtimes",
-                columns: new[] { "Id", "EndTime", "MovieId", "StartTime" },
+                columns: new[] { "Id", "EndTime", "MovieId", "Price", "StartTime" },
                 values: new object[,]
                 {
-                    { new Guid("30000000-0000-0000-0000-000000000001"), new DateTime(2026, 4, 11, 21, 0, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000001"), new DateTime(2026, 4, 11, 18, 0, 0, 0, DateTimeKind.Unspecified) },
-                    { new Guid("30000000-0000-0000-0000-000000000002"), new DateTime(2026, 4, 11, 23, 36, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000002"), new DateTime(2026, 4, 11, 21, 30, 0, 0, DateTimeKind.Unspecified) },
-                    { new Guid("30000000-0000-0000-0000-000000000003"), new DateTime(2026, 4, 12, 18, 28, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000003"), new DateTime(2026, 4, 12, 16, 0, 0, 0, DateTimeKind.Unspecified) },
-                    { new Guid("30000000-0000-0000-0000-000000000004"), new DateTime(2026, 4, 12, 21, 56, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000004"), new DateTime(2026, 4, 12, 19, 0, 0, 0, DateTimeKind.Unspecified) },
-                    { new Guid("30000000-0000-0000-0000-000000000005"), new DateTime(2026, 4, 13, 22, 49, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000005"), new DateTime(2026, 4, 13, 20, 0, 0, 0, DateTimeKind.Unspecified) },
-                    { new Guid("30000000-0000-0000-0000-000000000006"), new DateTime(2026, 4, 11, 13, 0, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000001"), new DateTime(2026, 4, 11, 9, 0, 0, 0, DateTimeKind.Unspecified) },
-                    { new Guid("30000000-0000-0000-0000-000000000007"), new DateTime(2026, 4, 12, 14, 0, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000001"), new DateTime(2026, 4, 12, 10, 0, 0, 0, DateTimeKind.Unspecified) },
-                    { new Guid("30000000-0000-0000-0000-000000000008"), new DateTime(2026, 4, 13, 16, 36, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000002"), new DateTime(2026, 4, 13, 14, 30, 0, 0, DateTimeKind.Unspecified) },
-                    { new Guid("30000000-0000-0000-0000-000000000009"), new DateTime(2026, 4, 11, 17, 28, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000003"), new DateTime(2026, 4, 11, 15, 0, 0, 0, DateTimeKind.Unspecified) },
-                    { new Guid("30000000-0000-0000-0000-000000000010"), new DateTime(2026, 4, 13, 13, 49, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000005"), new DateTime(2026, 4, 13, 9, 0, 0, 0, DateTimeKind.Unspecified) }
+                    { new Guid("30000000-0000-0000-0000-000000000001"), new DateTime(2026, 4, 11, 21, 0, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000001"), 30m, new DateTime(2026, 4, 11, 18, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { new Guid("30000000-0000-0000-0000-000000000002"), new DateTime(2026, 4, 11, 23, 36, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000002"), 35m, new DateTime(2026, 4, 11, 21, 30, 0, 0, DateTimeKind.Unspecified) },
+                    { new Guid("30000000-0000-0000-0000-000000000003"), new DateTime(2026, 4, 12, 18, 28, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000003"), 25m, new DateTime(2026, 4, 12, 16, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { new Guid("30000000-0000-0000-0000-000000000004"), new DateTime(2026, 4, 12, 21, 56, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000004"), 45m, new DateTime(2026, 4, 12, 19, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { new Guid("30000000-0000-0000-0000-000000000005"), new DateTime(2026, 4, 13, 22, 49, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000005"), 35m, new DateTime(2026, 4, 13, 20, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { new Guid("30000000-0000-0000-0000-000000000006"), new DateTime(2026, 4, 11, 13, 0, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000001"), 40m, new DateTime(2026, 4, 11, 9, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { new Guid("30000000-0000-0000-0000-000000000007"), new DateTime(2026, 4, 12, 14, 0, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000001"), 40m, new DateTime(2026, 4, 12, 10, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { new Guid("30000000-0000-0000-0000-000000000008"), new DateTime(2026, 4, 13, 16, 36, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000002"), 50m, new DateTime(2026, 4, 13, 14, 30, 0, 0, DateTimeKind.Unspecified) },
+                    { new Guid("30000000-0000-0000-0000-000000000009"), new DateTime(2026, 4, 11, 17, 28, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000003"), 45m, new DateTime(2026, 4, 11, 15, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { new Guid("30000000-0000-0000-0000-000000000010"), new DateTime(2026, 4, 13, 13, 49, 0, 0, DateTimeKind.Unspecified), new Guid("10000000-0000-0000-0000-000000000005"), 35m, new DateTime(2026, 4, 13, 9, 0, 0, 0, DateTimeKind.Unspecified) }
                 });
 
             migrationBuilder.CreateIndex(
