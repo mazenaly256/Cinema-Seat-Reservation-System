@@ -20,14 +20,22 @@ GET /api/movies?status=now-showing
 
 GET /api/movies/{movieId}
 
-### Create movie
+### Create a new movie
 
 POST /api/movies
 
-### Update movie
+### Update a movie
 
 PUT /api/movies/{movieId}
 
-### Delete movie
+### Delete a movie
 
 DELETE /api/movies/{movieId}
+
+### Get all showtimes for a movie
+
+GET /api/movies/{movieId}/showtimes
+
+### Get upcoming showtimes for a movie
+
+GET /api/movies/{movieId}/showtimes?status=upcoming
