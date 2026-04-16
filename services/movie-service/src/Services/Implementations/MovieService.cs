@@ -12,21 +12,21 @@ public class MovieService(ApplicationDbContext context) : IMovieService
 {
     public IEnumerable<MovieResponseDto> GetAllMovies(CancellationToken ct)
     {
-        var movies = context.Movies.Include(m => m.Genres).ThenInclude(mg => mg.Genre).Include(m => m.Showtimes).Select(MovieResponseDto.FromModel);
+        var movies = context.Movies.Include(m => m.Genres).ThenInclude(mg => mg.Genre).Select(MovieResponseDto.FromModel);
 
         return movies.ToList();
     }
 
     public IEnumerable<MovieResponseDto> GetMoviesWithUpcomingShowtimes(CancellationToken ct)
     {
-        var movies = context.Movies.Where(m => m.Showtimes.Any(st => st.StartTime > DateTime.Now)).Include(m => m.Genres).ThenInclude(mg => mg.Genre).Include(m => m.Showtimes.Where(st => st.StartTime > DateTime.Now)).Select(MovieResponseDto.FromModel);
+        var movies = context.Movies.Where(m => m.Showtimes.Any(st => st.StartTime > DateTime.Now)).Include(m => m.Genres).ThenInclude(mg => mg.Genre).Select(MovieResponseDto.FromModel);
 
         return movies.ToList();
     }
 
     public async Task<MovieResponseDto?> GetMovieByIdAsync(Guid movieId, CancellationToken ct)
     {
-        var movie = await context.Movies.Include(m => m.Genres).ThenInclude(mg => mg.Genre).Include(m => m.Showtimes).SingleOrDefaultAsync(m => m.Id == movieId, ct);
+        var movie = await context.Movies.Include(m => m.Genres).ThenInclude(mg => mg.Genre).SingleOrDefaultAsync(m => m.Id == movieId, ct);
 
         return MovieResponseDto.FromModel(movie);
     }

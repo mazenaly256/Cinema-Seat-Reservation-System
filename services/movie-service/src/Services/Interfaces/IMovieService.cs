@@ -20,6 +20,4 @@ public interface IMovieService
     Task UpdateMovieAsync(Guid movieId, UpdateMovieRequestDto dtoFromRequest, CancellationToken ct);
 
     Task DeleteMovieAsync(Guid movieId, CancellationToken ct);
-
-
 }

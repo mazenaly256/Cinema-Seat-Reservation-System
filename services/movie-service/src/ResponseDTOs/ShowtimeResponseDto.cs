@@ -14,6 +14,8 @@ public class ShowtimeResponseDto
 
     public DateTime EndTime { get; set; }
 
+    public decimal Price { get; set; }
+
 
     private ShowtimeResponseDto()
     {
@@ -33,7 +35,8 @@ public class ShowtimeResponseDto
             StartTime = showtime.StartTime,
             EndTime = showtime.EndTime,
             MovieId = showtime.MovieId,
-            MovieName = showtime.Movie?.Name!
+            MovieName = showtime.Movie?.Name!,
+            Price = showtime.Price  
         };
 
         return showtimeResponseDto;

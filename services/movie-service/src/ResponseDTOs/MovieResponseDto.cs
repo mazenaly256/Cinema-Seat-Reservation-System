@@ -12,8 +12,6 @@ public class MovieResponseDto
 
     public int MovieDurationMinutes { get; set; }
 
-    public IEnumerable<ShowtimeResponseDto>? Showtimes { get; set; }
-
     private MovieResponseDto()
     {
         
@@ -32,7 +30,6 @@ public class MovieResponseDto
             MovieDurationMinutes = movie.DurationMinutes,
             MovieName = movie.Name,
             GenresNames = movie.Genres?.Select(mg => mg.Genre.Name),
-            Showtimes = movie.Showtimes?.Select(ShowtimeResponseDto.FromModel)
         };
 
         return movieResponseDto;

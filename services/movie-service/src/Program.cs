@@ -16,6 +16,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlSer
 builder.Services.AddControllers();
 
 builder.Services.AddScoped<IMovieService, MovieService>();
+builder.Services.AddScoped<IShowtimeService, ShowtimeService>();
 
 var app = builder.Build();
 

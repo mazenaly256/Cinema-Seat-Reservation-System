@@ -10,9 +10,9 @@ namespace movie_service.Controllers;
 public class MovieController(IMovieService movieService) : ControllerBase
 {
     [HttpGet]
-    public IActionResult GetMovies(string status, CancellationToken ct)
+    public IActionResult GetMovies(string? status, CancellationToken ct)
     {
-        if (status  == "all")
+        if (status  is null)
         {
             // retrieve all the movies recorded in the system
             var movies = movieService.GetAllMovies(ct);
@@ -26,7 +26,7 @@ public class MovieController(IMovieService movieService) : ControllerBase
             return Ok(movies);
         }
 
-        return BadRequest("Unsupported status for movies retrieval. Allowed values are: 'now-showing', 'all'.");
+        return BadRequest("Unsupported status for movies retrieval. Allowed values are: 'now-showing'.");
     }
 
 

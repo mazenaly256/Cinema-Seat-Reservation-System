@@ -1,8 +1,98 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using movie_service.RequestDTOs;
+using movie_service.ResponseDTOs;
+using movie_service.Services.Implementations;
+using movie_service.Services.Interfaces;
 
 namespace movie_service.Controllers;
 
+[ApiController]
 [Route("api/showtimes")]
-public class ShowtimeController : ControllerBase
+public class ShowtimeController(IShowtimeService showtimeService) : ControllerBase
 {
+    [HttpGet]
+    public IActionResult GetShowtimes(Guid? movieId, DateTime? from, DateTime? to, string? status)
+    {
+        if (status is not null && status != "upcoming")
+        {
+            return BadRequest("Unsupported status for showtimes retrieval. Allowed values are: 'upcoming'.");
+        }
+
+        var showtimes = showtimeService.GetShowtimes(movieId, from, to, status);
+
+        return Ok(showtimes);
+    }
+
+
+    [HttpGet("{showtimeId:guid}", Name = "GetShowtimeById")]
+    public async Task<ActionResult<ShowtimeResponseDto>> GetShowtimeByIdAsync(Guid showtimeId, CancellationToken ct)
+    {
+        var showtime = await showtimeService.GetShowtimeByIdAsync(showtimeId, ct);
+
+        if (showtime is null)
+        {
+            return NotFound($"Showtime with ID: {showtimeId} is not found.");
+        }
+
+        return Ok(showtime);
+    }
+
+
+    [HttpPost]
+    public async Task<IActionResult> CreateShowtimeAsync(CreateShowtimeRequestDto showtimeDtoFromRequest, CancellationToken ct)
+    {
+        try
+        {
+            var newShowtimeId = await showtimeService.AddNewShowtimeAsync(showtimeDtoFromRequest, ct);
+
+            if (newShowtimeId is null)
+            {
+                return StatusCode(500, "error while creating new showtime");
+            }
+
+            return CreatedAtRoute("GetShowtimeById", new {showtimeId = newShowtimeId}, await showtimeService.GetShowtimeByIdAsync((Guid)newShowtimeId, ct));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest($"Invalid data. {ex.Message}");
+        }
+    }
+
+
+    [HttpPut("{showtimeId:guid}")]
+    public async Task<IActionResult> UpdateShowtimeAsync(Guid showtimeId, UpdateShowtimeRequestDto showtimeDtoFromRequest, CancellationToken ct)
+    {
+        try
+        {
+            if (!await showtimeService.ExistsByIdAsync(showtimeId, ct))
+            {
+                return NotFound($"Movie with ID: {showtimeId} does NOT exist.");
+            }
+
+            await showtimeService.UpdateShowtimeAsync(showtimeId, showtimeDtoFromRequest, ct);
+
+            return NoContent();
+        }
+        catch(InvalidOperationException ex)
+        {
+            return StatusCode(500, $"Unexpected error while updating the movie. {ex.Message}");
+        }
+
+    }
+
+
+    [HttpDelete("{showtimeId:guid}")]
+    public async Task<IActionResult> DeleteShowtimeAsync(Guid showtimeId, CancellationToken ct)
+    {
+        try
+        {
+            await showtimeService.DeleteShowtimeAsync(showtimeId, ct);
+
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(500, $"Error while deleting the movie. {ex.Message}");
+        }
+    }
 }
