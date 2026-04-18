@@ -8,6 +8,15 @@
 
 ## Endpoints
 
+### Check existence of an upcoming showtime by id
+
+`HEAD /api/showtimes/{showtimeId}`
+
+Returns:
+
+- `200 OK` — exists
+- `404 Not Found` — has already started or does not exist (no _upcoming_ showtime with the given id)
+
 ### Get all showtimes
 
 `GET /api/showtimes`

@@ -9,12 +9,9 @@ Handles seat reservations for showtimes. Furthermore, provides a representation 
 ### Customer
 
 - Get available seats
+- Get details of a reservation
 - Reserve seats for a showtime
 - Cancel a reservation
-
-### Admin
-
-- Get reservations according to specific criteria
 
 ### System
 
