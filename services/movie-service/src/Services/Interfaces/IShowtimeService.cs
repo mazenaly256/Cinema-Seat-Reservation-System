@@ -9,6 +9,8 @@ public interface IShowtimeService
     
     Task<bool> ExistsByIdAsync(Guid showtimeId, CancellationToken ct);
 
+    Task<bool> CheckIfShowtimeIsUpcomingByIdAsync(Guid showtimeId, CancellationToken ct);
+
     Task<ShowtimeResponseDto?> GetShowtimeByIdAsync(Guid showtimeId, CancellationToken ct);
 
     Task<Guid?> AddNewShowtimeAsync(CreateShowtimeRequestDto showtimeDtoFromRequest, CancellationToken ct);

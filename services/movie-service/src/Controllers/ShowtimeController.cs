@@ -38,6 +38,13 @@ public class ShowtimeController(IShowtimeService showtimeService) : ControllerBa
     }
 
 
+    [HttpHead("{showtimeId:guid}")]
+    public async Task<IActionResult> CheckExistenceOfUpcomingShowtimeAsync(Guid showtimeId, CancellationToken ct)
+    {
+        return (await showtimeService.CheckIfShowtimeIsUpcomingByIdAsync(showtimeId, ct)) ? Ok() : NotFound();
+    }
+
+
     [HttpPost]
     public async Task<IActionResult> CreateShowtimeAsync(CreateShowtimeRequestDto showtimeDtoFromRequest, CancellationToken ct)
     {
@@ -84,6 +91,11 @@ public class ShowtimeController(IShowtimeService showtimeService) : ControllerBa
     [HttpDelete("{showtimeId:guid}")]
     public async Task<IActionResult> DeleteShowtimeAsync(Guid showtimeId, CancellationToken ct)
     {
+        if (!await showtimeService.ExistsByIdAsync(showtimeId, ct))
+        {
+            return BadRequest($"Showtime with ID: {showtimeId} does NOT exist.");
+        }
+
         try
         {
             await showtimeService.DeleteShowtimeAsync(showtimeId, ct);

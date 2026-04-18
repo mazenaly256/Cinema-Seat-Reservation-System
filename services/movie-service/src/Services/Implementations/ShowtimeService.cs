@@ -119,11 +119,6 @@ public class ShowtimeService(ApplicationDbContext context) : IShowtimeService
 
     public async Task DeleteShowtimeAsync(Guid showtimeId, CancellationToken ct)
     {
-        if (!await this.ExistsByIdAsync(showtimeId, ct))
-        {
-            throw new InvalidOperationException($"Showtime with ID: {showtimeId} does NOT exist.");
-        }
-
         context.Remove((await context.Showtimes.SingleOrDefaultAsync(st => st.Id == showtimeId, ct))!);
 
         await context.SaveChangesAsync(ct);
@@ -132,5 +127,10 @@ public class ShowtimeService(ApplicationDbContext context) : IShowtimeService
     public async Task<bool> ExistsByIdAsync(Guid showtimeId, CancellationToken ct)
     {
         return await context.Showtimes.AnyAsync(st => st.Id == showtimeId, ct);
+    }
+
+    public async Task<bool> CheckIfShowtimeIsUpcomingByIdAsync(Guid showtimeId, CancellationToken ct)
+    {
+        return await context.Showtimes.AnyAsync(st => st.Id == showtimeId && st.StartTime > DateTime.Now, ct);
     }
 }
