@@ -12,10 +12,6 @@
 
 `POST /api/reservations`
 
-### Delete a reservation
-
-`DELETE /api/reservations/{reservationId}`
-
 ---
 
 ## Seats Endpoints

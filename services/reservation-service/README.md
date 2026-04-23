@@ -4,8 +4,6 @@
 
 This service handles seat reservations for showtimes in the cinema reservation system.
 
-It manages seat availability, reservation creation, and reservation cancellation.
-
 ---
 
 ## Architecture
