@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using reservation_service.Data;
+using reservation_service.Services.Implementations;
+using reservation_service.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +12,7 @@ if (string.IsNullOrWhiteSpace(dbConnectionString))
 }
 
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(dbConnectionString));
+builder.Services.AddScoped<IReservationService, ReservationService>();
 
 builder.Services.AddControllers();
 
