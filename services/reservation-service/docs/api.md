@@ -16,15 +16,15 @@
 
 ## Seats Endpoints
 
-### Get seats by status and showtime
+### Get seats by showtime and availability
 
 `GET /api/seats`
 Supports query parameters:
 
-- status (required)
-  - available → seats that are not reserved (free seats)
-  - reserved → already reserved seats
 - showtimeId (required) → specify the showtime of the queried seats
+- available (required)
+  - available → seats that are neither reserved nor locked/held (free seats)
+  - reserved → seats that are either reserved or locked/held
 
 #### Examples
 
