@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileSystemGlobbing.Internal;
 using reservation_service.Data;
+using reservation_service.IntegrationDTOs.MovieService;
 using reservation_service.Models;
 using reservation_service.RequestDTOs;
 using reservation_service.Services.Interfaces;
@@ -33,7 +34,15 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
 
             if (!response.IsSuccessStatusCode)
             {
-                throw new ArgumentException("No upcoming showtime with the sent ID");
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    throw new ArgumentException("No upcoming showtime with the sent ID");
+                }
+
+                else
+                {
+                    throw new InvalidOperationException("Failed to retrieve the showtime data.");
+                }
             }
         }
 
@@ -66,14 +75,43 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
 
 
 
-
+            #region Mock Payment
             /* the logic of the payment processing will be here, now for the sake of simplicity,
             * suppose there is always a successful payment with new GUID */
 
-            var mockPayment = new Payment { PaidAmount = 0, PaidAt = DateTime.Now };
-            await context.Payments.AddAsync(mockPayment);
-            context.SaveChanges();
+            ShowtimeIntegrationDto? showtime;
 
+            using (HttpClient client = new HttpClient())
+            {
+                string url = $"{configuration["movieServiceBaseUrl"]}/api/showtimes/{reservationDtoFromRequest.ShowtimeId}";
+
+                var response = await client.GetAsync(url, ct);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        throw new ArgumentException("No upcoming showtime with the sent ID");
+                    }
+
+                    else
+                    {
+                        throw new InvalidOperationException("Failed to retrieve the showtime data.");
+                    }
+                }
+
+                showtime = await response.Content.ReadFromJsonAsync<ShowtimeIntegrationDto>(ct);
+
+                if (showtime is null)
+                {
+                    throw new InvalidOperationException("Failed to retrieve the showtime data.");
+                }
+            }
+
+            var mockPayment = new Payment { PaidAmount = showtime!.Price, PaidAt = DateTime.Now };
+            await context.Payments.AddAsync(mockPayment, ct);
+            await context.SaveChangesAsync(ct);
+            #endregion
 
 
 
