@@ -13,6 +13,7 @@ if (string.IsNullOrWhiteSpace(dbConnectionString))
 
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(dbConnectionString));
 builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<ISeatService, SeatService>();
 
 builder.Services.AddControllers();
 
