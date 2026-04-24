@@ -51,6 +51,13 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
                 HeldUntil = DateTime.Now.AddMinutes(10)
             };
 
+
+            // checks if the seat has been reserved by another thread (another request)
+            if (await context.Reservations.AnyAsync(r => r.ShowtimeId == reservationDtoFromRequest.ShowtimeId && r.SeatNumber == reservationDtoFromRequest.SeatNumber))
+            {
+                throw new InvalidOperationException("The seat is already successfully reserved with a confirmed payment."); ;
+            }
+
             await context.SeatHolds.AddAsync(seatTemporaryLock, ct);
             await context.SaveChangesAsync(ct);
 
@@ -85,7 +92,7 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
             await context.SaveChangesAsync(ct);
         }
 
-        catch(DbUpdateException ex) when (ex.InnerException?.Message.Contains("PK_SeatHolds") == true)    // Race condition handling
+        catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("PK_SeatHolds") == true)    // Race condition handling
         {
             // the message should be logged here
 
@@ -93,7 +100,12 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
             throw new InvalidOperationException($"The seat is locked, try again after a while or choose another seat.");
         }
 
-        catch(Exception ex)
+        catch (InvalidOperationException)
+        {
+            throw;
+        }
+
+        catch (Exception ex)
         {
             // the message should be logged here
 
