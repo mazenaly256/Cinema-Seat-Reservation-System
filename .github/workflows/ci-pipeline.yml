@@ -23,4 +23,4 @@ jobs:
           dotnet build cinema-seat-reservation-system.slnx --no-restore --configuration Release
 
       - name: Docker Validation
-        run: docker-compose config
+        run: docker compose config
