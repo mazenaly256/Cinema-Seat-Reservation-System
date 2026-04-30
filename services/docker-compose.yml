@@ -1,0 +1,46 @@
+networks:
+  cinema-reservation-system-network:
+    driver: bridge
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Password123!
+    ports:
+      - "1433:1433"
+    networks:
+      - cinema-reservation-system-network
+
+  movie-service:
+    build:
+      context: .
+      dockerfile: movie-service/src/Dockerfile
+    ports:
+      - 7087:8080
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Default=Server=sqlserver;Database=MovieServiceDB;User Id=sa;Password=Password123!;TrustServerCertificate=True;
+    depends_on:
+      - sqlserver
+    networks:
+      - cinema-reservation-system-network
+
+  reservation-service:
+    build:
+      context: .
+      dockerfile: reservation-service/src/Dockerfile
+    ports:
+      - 7019:8080
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - movieServiceBaseUrl=http://movie-service:8080
+      - ConnectionStrings__Default=Server=sqlserver;Database=ReservationServiceDB;User Id=sa;Password=Password123!;TrustServerCertificate=True;
+    depends_on:
+      - sqlserver
+      - movie-service
+    networks:
+      - cinema-reservation-system-network
