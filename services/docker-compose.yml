@@ -27,6 +27,11 @@ services:
       - sqlserver
     networks:
       - cinema-reservation-system-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5" # Limit to half a core
+          memory: 256M
 
   reservation-service:
     build:
@@ -44,3 +49,8 @@ services:
       - movie-service
     networks:
       - cinema-reservation-system-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5" # Limit to half a core
+          memory: 256M
