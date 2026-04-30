@@ -1,0 +1,26 @@
+name: Cinema Seat Reservation System CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore & Build
+        run: |
+          dotnet restore cinema-seat-reservation-system.slnx
+          dotnet build cinema-seat-reservation-system.slnx --no-restore --configuration Release
+
+      - name: Docker Validation
+        run: docker compose -f services/docker-compose.yml config
