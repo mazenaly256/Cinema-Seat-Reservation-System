@@ -17,8 +17,9 @@ services:
     build:
       context: .
       dockerfile: movie-service/src/Dockerfile
-    ports:
-      - 7087:8080
+
+    # Removed the ports section, hence the service can not be accessed directly from the host machine
+
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
@@ -37,8 +38,9 @@ services:
     build:
       context: .
       dockerfile: reservation-service/src/Dockerfile
-    ports:
-      - 7019:8080
+
+    # Removed the ports section, hence the service can not be accessed directly from the host machine
+
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
@@ -47,6 +49,37 @@ services:
     depends_on:
       - sqlserver
       - movie-service
+    networks:
+      - cinema-reservation-system-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5" # Limit to half a core
+          memory: 256M
+
+  api-gateway-service:
+    build:
+      context: .
+      dockerfile: api-gateway-service/src/Dockerfile
+    ports:
+      - 5241:8080
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ReverseProxy__Routes__movies-route__ClusterId=movie-service-containers
+      - ReverseProxy__Routes__movies-route__Match__Path=/api/movies/{**catch-all}
+      - ReverseProxy__Routes__showtimes-route__ClusterId=movie-service-containers
+      - ReverseProxy__Routes__showtimes-route__Match__Path=/api/showtimes/{**catch-all}
+      - ReverseProxy__Routes__reservations-route__ClusterId=reservation-service-containers
+      - ReverseProxy__Routes__reservations-route__Match__Path=/api/reservations/{**catch-all}
+      - ReverseProxy__Routes__seats-route__ClusterId=reservation-service-containers
+      - ReverseProxy__Routes__seats-route__Match__Path=/api/seats/{**catch-all}
+      - ReverseProxy__Clusters__movie-service-containers__Destinations__destination1__Address=http://movie-service:8080
+      - ReverseProxy__Clusters__reservation-service-containers__Destinations__destination1__Address=http://reservation-service:8080
+    depends_on:
+      - sqlserver
+      - movie-service
+      - reservation-service
     networks:
       - cinema-reservation-system-network
     deploy:
