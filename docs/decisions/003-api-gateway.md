@@ -2,10 +2,10 @@
 
 ## Context
 
-In the MVP version, the **Reservation Service** communicates directly with the **Movie Service**. While this is functional, it comes with several problems:
+In the MVP version, the **Reservation Service** communicates directly with the **Movie Service** and both should be called separately. While this is functional, it comes with several problems:
 
 - **Client Complexity:** Frontend applications must manage multiple base URLs and internal ports for different services.
-- **Cascading Failures:** If one service fails or takes a long time to respond, the calling services will also have to wait or maybe fail not due to bug but due to the dependency, leading to the observed latency that spikes up to **48.79s** during the baseline performance measuring. Without a central "Fail-Fast" layer, one slow service can cause slowing down of the entire system.
+- **Cascading Failures:** If one service takes a long time to respond (which is considered as a failure), the calling services will also have to wait.
 - **Security Surface:** Every service must individually manage CORS, SSL, and authentication, increasing the headache of configurations and repetitive logic.
 
 ---
@@ -16,9 +16,9 @@ Implement **YARP (Yet Another Reverse Proxy)** as a centralized **API Gateway** 
 
 **The Flow:**
 
-1.  **Client Request:** All requests hit the Gateway (e.g., `:8000/api/movies/*` or `:8000/api/reservations/*`) not separate services.
+1.  **Client Request:** All requests hit the Gateway container (e.g., `:8080/api/movies/*` or `:8080/api/reservations/*`) not separate services.
 2.  **Reverse Proxying:** YARP routes the request to the appropriate internal service (Docker container).
-3.  **Resilience Enforcement:** The Gateway applies a strict **Request Timeout** (e.g., 5 seconds) to prevent the 48-second hang observed in MVP in baseline metrics.
+3.  **Resilience Enforcement:** The Gateway applies a strict **Request Timeout** (e.g., 10 seconds) to prevent the long hangs.
 
 ---
 
@@ -39,11 +39,11 @@ Implement **YARP (Yet Another Reverse Proxy)** as a centralized **API Gateway** 
 ## Consequences
 
 - **Centralized Resilience:** We can now implement Rate Limiting and Timeouts in only one place to protect all the services
-- **Simplified Security:** Future JWT validation will happen at the Gateway, so internal services can trust the headers they receive.
+- **Simplified Security:** Future JWT validation will happen at the Gateway, so internal services can trust the headers they receive, as the services _can not be reached except through the gateway_. If the token is fake or expired or even correct but not authorized to use that endpoint, the request is killed at the edge.
 - **Operational Overhead:** We have added a third service to the `docker-compose.yml`, slightly increasing the infrastructure management load.
 
 ---
 
 ## Key Insight
 
-> The Gateway isn't just a router; it's a **shield**. It transforms our collection of services into a single, cohesive 'System' by centralizing cross-cutting concerns like security and failure management.
+> The Gateway isn't just a router; it's a **shield**. It transforms our collection of services into a single, cohesive 'System' by centralizing cross-cutting concerns like security and failure management (failure includes here long time to response).

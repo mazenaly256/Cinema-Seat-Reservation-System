@@ -6,5 +6,5 @@ The API Gateway is the centralized entry point and primary defense mechanism for
 
 ## Impact on the system
 
-- **Latency Mitigation:** Reduced peak system-wide hang times from **48s** to a predictable **5s timeout**.
-- **Resource Efficiency:** Protected **512MB RAM**-constrained containers from resource saturation and cascading failures by proactively reclaiming memory from stale asynchronous tasks that are not completed within the 5 seconds.
+- **Latency Limiting:** Limit peak system-wide hang times to a predictable **10s timeout**.
+- **Resource Efficiency:** Protected **256MB RAM**-constrained containers from resource saturation and cascading failures by proactively reclaiming the resource from stale incompletely processed requests that are not completed within the 10 seconds.
