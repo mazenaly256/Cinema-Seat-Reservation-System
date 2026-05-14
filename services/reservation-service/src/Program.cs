@@ -11,11 +11,11 @@ if (string.IsNullOrWhiteSpace(dbConnectionString))
     throw new InvalidOperationException("Connection string is not found.");
 }
 
+builder.Services.AddControllers();
+
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(dbConnectionString));
 builder.Services.AddScoped<IReservationService, ReservationService>();
 builder.Services.AddScoped<ISeatService, SeatService>();
-
-builder.Services.AddControllers();
 
 var app = builder.Build();
 

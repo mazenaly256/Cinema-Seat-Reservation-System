@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using movie_service.RequestDTOs;
 using movie_service.ResponseDTOs;
 using movie_service.Services.Interfaces;
@@ -7,7 +9,7 @@ namespace movie_service.Controllers;
 
 [ApiController]
 [Route("api/movies")]
-public class MovieController(IMovieService movieService) : ControllerBase
+public class MovieController(IMovieService movieService, IValidator<CreateMovieRequestDto> createMovieRequestDtoValidator) : ControllerBase
 {
     [HttpGet]
     public IActionResult GetMovies(string? status, CancellationToken ct)
@@ -47,6 +49,13 @@ public class MovieController(IMovieService movieService) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateMovieAsync(CreateMovieRequestDto movieFromRequest, CancellationToken ct)
     {
+        var validationResult = await createMovieRequestDtoValidator.ValidateAsync(movieFromRequest, ct);
+
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(validationResult.Errors.Select(e => e.ErrorMessage));
+        }
+
         if (await movieService.ExistsByNameAsync(movieFromRequest.MovieName, ct))
         {
             return Conflict($"Movie with name '{movieFromRequest.MovieName}' already exists.");
@@ -96,7 +105,11 @@ public class MovieController(IMovieService movieService) : ControllerBase
 
             return NoContent();
         }
-        catch(Exception ex)
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest($"{ex.Message}");
+        }
+        catch (Exception ex)
         {
             return StatusCode(500, $"Error while deleting the movie. {ex.Message}");
         }

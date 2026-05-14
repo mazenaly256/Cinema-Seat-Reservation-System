@@ -46,7 +46,7 @@ public class MovieService(ApplicationDbContext context) : IMovieService
         var movie = new Movie
         {
             Name = dtoFromRequest.MovieName,
-            DurationMinutes = dtoFromRequest.DurationMinutes,
+            DurationMinutes = (int)dtoFromRequest.DurationMinutes!,
             Genres = dtoFromRequest.GenresIds!.Select(g => new MovieGenre { GenreId = g }).ToList()
         };
 

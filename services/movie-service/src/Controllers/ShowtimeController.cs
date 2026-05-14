@@ -1,14 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using movie_service.RequestDTOs;
 using movie_service.ResponseDTOs;
 using movie_service.Services.Implementations;
 using movie_service.Services.Interfaces;
+using movie_service.Validators;
 
 namespace movie_service.Controllers;
 
 [ApiController]
 [Route("api/showtimes")]
-public class ShowtimeController(IShowtimeService showtimeService) : ControllerBase
+public class ShowtimeController(IShowtimeService showtimeService, IValidator<CreateShowtimeRequestDto> createShowtimeRequestDtoValidator) : ControllerBase
 {
     [HttpGet]
     public IActionResult GetShowtimes(Guid? movieId, DateTime? from, DateTime? to, string? status)
@@ -48,6 +50,13 @@ public class ShowtimeController(IShowtimeService showtimeService) : ControllerBa
     [HttpPost]
     public async Task<IActionResult> CreateShowtimeAsync(CreateShowtimeRequestDto showtimeDtoFromRequest, CancellationToken ct)
     {
+        var validationResult = await createShowtimeRequestDtoValidator.ValidateAsync(showtimeDtoFromRequest, ct);
+
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(validationResult.Errors.Select(e => e.ErrorMessage));
+        }
+
         try
         {
             var newShowtimeId = await showtimeService.AddNewShowtimeAsync(showtimeDtoFromRequest, ct);
