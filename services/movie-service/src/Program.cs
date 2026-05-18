@@ -23,8 +23,12 @@ builder.Services.AddScoped<IShowtimeService, ShowtimeService>();
 builder.Services.AddScoped<IValidator<CreateMovieRequestDto>, CreateMovieRequestDtoValidator>();
 builder.Services.AddScoped<IValidator<CreateShowtimeRequestDto>, CreateShowtimeRequestDtoValidator>();
 
+builder.Services.AddOpenApi("movie-service-api-doc");
+
 var app = builder.Build();
 
 app.MapControllers();
+
+app.MapOpenApi();
 
 app.Run();

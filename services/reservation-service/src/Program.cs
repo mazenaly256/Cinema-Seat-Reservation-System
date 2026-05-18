@@ -17,8 +17,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlSer
 builder.Services.AddScoped<IReservationService, ReservationService>();
 builder.Services.AddScoped<ISeatService, SeatService>();
 
+builder.Services.AddOpenApi("reservation-service-api-doc");
+
 var app = builder.Build();
 
 app.MapControllers();
+
+app.MapOpenApi();
 
 app.Run();
