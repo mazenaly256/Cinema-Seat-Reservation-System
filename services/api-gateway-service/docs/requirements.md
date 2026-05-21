@@ -9,7 +9,7 @@ Receives all the requests that come to the system, acting as a single entry poin
 - **Routing:** It must analyze incoming HTTP request paths (e.g., /movies/ or /reservations/) and forward them to the correct service (hence it is called "Proxy")
 - **Rate Limiting:** Protects the system from buggy clients by setting a maximum number of requests per time window.
 - **10-second Request Timeout:** Limit the maximum time of procesing a request to 10 seconds, and then retrun service unavailable if the request is still waiting, achieving a central "Fail-Fast" layer.
-- **Authentication & Authorization:** The Gateway validates the JWT and user permissions before the request ever hits the internal services.
+- **JWT Verification:** The Gateway enforces a strict fail-fast policy by cryptographically validating incoming JWTs at the edge before reaching the internal services, offloading the authorization to the downstream microservices if the token is valid.
 
 ## Non-Functional Requirements
 
