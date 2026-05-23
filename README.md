@@ -13,4 +13,4 @@ This system is a multi-service ecosystem designed to demonstrate scalable backen
 - **Movie Service:** Responsible for movies and showtimes.
 - **Reservation Service:** Responsible for seats layout representation and seat reservation.
 - **Identity Service:** Acts as the centralized Identity Provider (IdP) for the system.
-- **API Gateway:** Centeralizes the logic of authentication and apply rate limits and timeouts for requests.
+- **API Gateway:** Centralizes the logic of authentication and apply rate limits and timeouts for requests.
