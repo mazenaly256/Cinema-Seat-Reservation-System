@@ -4,12 +4,13 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>api_gateway_service</RootNamespace>
+    <RootNamespace>identity_service</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" />
-    <PackageReference Include="Yarp.ReverseProxy" Version="2.3.0" />
+    <PackageReference Include="MongoDB.Driver" Version="3.8.1" />
   </ItemGroup>
 
 </Project>

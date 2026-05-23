@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using movie_service.Filters;
 using movie_service.RequestDTOs;
 using movie_service.ResponseDTOs;
 using movie_service.Services.Interfaces;
@@ -37,6 +38,7 @@ public class MovieController(IMovieService movieService, IValidator<CreateMovieR
     }
 
 
+
     [HttpGet("{movieId:guid}", Name = "GetMovieByIdAsync")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -55,6 +57,8 @@ public class MovieController(IMovieService movieService, IValidator<CreateMovieR
     }
 
 
+
+    [AdminOnly]
     [HttpPost]
     [Consumes("application/json")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -88,6 +92,8 @@ public class MovieController(IMovieService movieService, IValidator<CreateMovieR
     }
 
 
+
+    [AdminOnly]
     [HttpPut("{movieId:guid}")]
     [Consumes("application/json")]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -118,6 +124,7 @@ public class MovieController(IMovieService movieService, IValidator<CreateMovieR
 
 
 
+    [AdminOnly]
     [HttpDelete("{movieId:guid}")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
