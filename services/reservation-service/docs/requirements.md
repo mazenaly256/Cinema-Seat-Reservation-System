@@ -2,7 +2,7 @@
 
 ## Responsibilities
 
-- Authorization
+- Role-based authorization according to the request headers that added by the Gateway
 - Handle seat reservations for showtimes.
 - Provide a representation for the seats layout in the hall with availability status.
 - Communicate with Movie Service to validate showtime data.
