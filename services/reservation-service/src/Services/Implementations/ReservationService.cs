@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 
 namespace reservation_service.Services.Implementations;
 
-public class ReservationService(ApplicationDbContext context, IConfiguration configuration, IHttpContextAccessor httpContextAccessor) : IReservationService
+public class ReservationService(ApplicationDbContext context, IConfiguration configuration) : IReservationService
 {
     public async Task AddNewReservationAsync(CreateReservationRequestDto reservationDtoFromRequest, CancellationToken ct)
     {
@@ -29,13 +29,6 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
             string url = $"{configuration["movieServiceBaseUrl"]}/api/showtimes/{reservationDtoFromRequest.ShowtimeId}";
 
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, url);
-
-
-            string? token = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
-            if (!string.IsNullOrEmpty(token))
-            {
-                request.Headers.Add("Authorization", token);
-            }
 
             HttpResponseMessage response = await client.SendAsync(request, ct);
 

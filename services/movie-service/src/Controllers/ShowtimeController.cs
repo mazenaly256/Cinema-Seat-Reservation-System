@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using movie_service.Filters;
 using movie_service.RequestDTOs;
 using movie_service.ResponseDTOs;
 using movie_service.Services.Implementations;
@@ -60,6 +61,8 @@ public class ShowtimeController(IShowtimeService showtimeService, IValidator<Cre
     }
 
 
+
+    [AdminOnly]
     [HttpPost]
     [Consumes("application/json")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -94,6 +97,8 @@ public class ShowtimeController(IShowtimeService showtimeService, IValidator<Cre
     }
 
 
+
+    [AdminOnly]
     [HttpPut("{showtimeId:guid}")]
     [Consumes("application/json")]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -122,6 +127,8 @@ public class ShowtimeController(IShowtimeService showtimeService, IValidator<Cre
     }
 
 
+
+    [AdminOnly]
     [HttpDelete("{showtimeId:guid}")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
