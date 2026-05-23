@@ -1,4 +1,6 @@
 <Solution>
+  <Project Path="services/api-gateway-service/src/api-gateway-service.csproj" />
+  <Project Path="services/identity-service/src/identity-service.csproj" />
   <Project Path="services/movie-service/src/movie-service.csproj" />
   <Project Path="services/reservation-service/src/reservation-service.csproj" />
 </Solution>

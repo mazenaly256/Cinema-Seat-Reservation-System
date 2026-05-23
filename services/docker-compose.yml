@@ -13,6 +13,33 @@ services:
     networks:
       - cinema-reservation-system-network
 
+  identity-db-mongo-server:
+    image: mongo:latest
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=Password123!
+    ports:
+      - "27017:27017"
+    networks:
+      - cinema-reservation-system-network
+
+  identity-db-ui:
+    image: mongo-express:latest
+    container_name: identity_db_web_ui
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=Password123!
+      - ME_CONFIG_MONGODB_SERVER=identity-db-mongo-server
+      - ME_CONFIG_MONGODB_AUTH_DATABASE=admin
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+      - ME_CONFIG_OPTIONS_EDITORTHEME=default
+    ports:
+      - "8081:8081"
+    depends_on:
+      - identity-db-mongo-server
+    networks:
+      - cinema-reservation-system-network
+
   movie-service:
     build:
       context: .

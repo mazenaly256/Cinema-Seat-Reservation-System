@@ -1,8 +1,11 @@
 # Reservation Service Requirements
 
-## Responsibility
+## Responsibilities
 
-Handles seat reservations for showtimes and provides a representation for the seats layout in the hall with availability status. Furthermore, communicate with Movie Service over HTTPS to validate showtime data.
+- Role-based authorization according to the request headers that added by the Gateway
+- Handle seat reservations for showtimes.
+- Provide a representation for the seats layout in the hall with availability status.
+- Communicate with Movie Service to validate showtime data.
 
 ## Functional Requirements
 
@@ -11,7 +14,7 @@ Handles seat reservations for showtimes and provides a representation for the se
 - Get reserved or available seats for a specific showtime
 - Reserve seats for a showtime
 
-### System
+### General
 
 - Prevent double booking
 - Check the availability of the showtime and it is in future (via Movie Service)

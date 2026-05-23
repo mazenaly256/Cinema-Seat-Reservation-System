@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using movie_service.Filters;
 using movie_service.RequestDTOs;
 using movie_service.ResponseDTOs;
 using movie_service.Services.Interfaces;
@@ -7,9 +10,14 @@ namespace movie_service.Controllers;
 
 [ApiController]
 [Route("api/movies")]
-public class MovieController(IMovieService movieService) : ControllerBase
+[Tags("Movies")]
+public class MovieController(IMovieService movieService, IValidator<CreateMovieRequestDto> createMovieRequestDtoValidator) : ControllerBase
 {
     [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [EndpointName("Get All Movies")]
+    [EndpointDescription("Fetch all movies filtered according to specific criteria.")]
     public IActionResult GetMovies(string? status, CancellationToken ct)
     {
         if (status  is null)
@@ -30,8 +38,13 @@ public class MovieController(IMovieService movieService) : ControllerBase
     }
 
 
+
     [HttpGet("{movieId:guid}", Name = "GetMovieByIdAsync")]
-    public async Task<IActionResult> GetMovieByIdAsync(Guid movieId, CancellationToken ct)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [EndpointName("Get Movie By Id")]
+    [EndpointDescription("Searches for a movie with the given ID")]
+    public async Task<ActionResult<MovieResponseDto>> GetMovieByIdAsync(Guid movieId, CancellationToken ct)
     {
         var movie = await movieService.GetMovieByIdAsync(movieId, ct);
 
@@ -44,9 +57,25 @@ public class MovieController(IMovieService movieService) : ControllerBase
     }
 
 
+
+    [AdminOnly]
     [HttpPost]
+    [Consumes("application/json")]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointName("Add New Movie")]
+    [EndpointDescription("Adds a new movie to the cinema's available movies")]
     public async Task<IActionResult> CreateMovieAsync(CreateMovieRequestDto movieFromRequest, CancellationToken ct)
     {
+        var validationResult = await createMovieRequestDtoValidator.ValidateAsync(movieFromRequest, ct);
+
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(validationResult.Errors.Select(e => e.ErrorMessage));
+        }
+
         if (await movieService.ExistsByNameAsync(movieFromRequest.MovieName, ct))
         {
             return Conflict($"Movie with name '{movieFromRequest.MovieName}' already exists.");
@@ -63,7 +92,15 @@ public class MovieController(IMovieService movieService) : ControllerBase
     }
 
 
+
+    [AdminOnly]
     [HttpPut("{movieId:guid}")]
+    [Consumes("application/json")]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointName("Update Movie")]
+    [EndpointDescription("Edits movie's data")]
     public async Task<IActionResult> UpdateMovieAsync(Guid movieId, UpdateMovieRequestDto movieFromRequest, CancellationToken ct)
     {
         try
@@ -87,7 +124,13 @@ public class MovieController(IMovieService movieService) : ControllerBase
 
 
 
+    [AdminOnly]
     [HttpDelete("{movieId:guid}")]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [EndpointName("Delete Movie")]
+    [EndpointDescription("Deletes a movie from the cinema's database")]
     public async Task<IActionResult> DeleteMovieAsync(Guid movieId, CancellationToken ct)
     {
         try
@@ -96,7 +139,11 @@ public class MovieController(IMovieService movieService) : ControllerBase
 
             return NoContent();
         }
-        catch(Exception ex)
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest($"{ex.Message}");
+        }
+        catch (Exception ex)
         {
             return StatusCode(500, $"Error while deleting the movie. {ex.Message}");
         }
