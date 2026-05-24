@@ -13,7 +13,7 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.HasKey(p => p.Id);
 
         builder.Property(p => p.Id)
-            .HasDefaultValueSql("NEWSEQUENTIALID()");
+            .HasDefaultValueSql("gen_random_uuid()");
 
         builder.Property(m => m.PaidAmount)
             .IsRequired();

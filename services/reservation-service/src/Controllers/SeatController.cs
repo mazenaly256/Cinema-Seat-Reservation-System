@@ -33,7 +33,7 @@ public class SeatController(ISeatService seatService) : ControllerBase
             }
         }
 
-        catch (InvalidOperationException ex)
+        catch (ArgumentException ex)
         {
             return BadRequest(ex.Message);
         }

@@ -2,8 +2,8 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using movie_service.Data;
 
 #nullable disable
@@ -17,22 +17,22 @@ namespace movie_service.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.5")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("ProductVersion", "10.0.4")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("movie_service.Models.Genre", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasColumnType("character varying(30)");
 
                     b.HasKey("Id");
 
@@ -70,16 +70,16 @@ namespace movie_service.Data.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<int>("DurationMinutes")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
@@ -121,10 +121,10 @@ namespace movie_service.Data.Migrations
             modelBuilder.Entity("movie_service.Models.MovieGenre", b =>
                 {
                     b.Property<Guid>("MovieId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("GenreId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.HasKey("MovieId", "GenreId");
 
@@ -189,20 +189,21 @@ namespace movie_service.Data.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<DateTime>("EndTime")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("MovieId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(8, 2)
+                        .HasColumnType("numeric(8,2)");
 
                     b.Property<DateTime>("StartTime")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -214,82 +215,90 @@ namespace movie_service.Data.Migrations
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-000000000001"),
-                            EndTime = new DateTime(2026, 4, 11, 21, 0, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2027, 4, 11, 19, 0, 0, 0, DateTimeKind.Utc),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000001"),
                             Price = 30m,
-                            StartTime = new DateTime(2026, 4, 11, 18, 0, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2027, 4, 11, 16, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-000000000002"),
-                            EndTime = new DateTime(2026, 4, 11, 23, 36, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2027, 4, 11, 21, 36, 0, 0, DateTimeKind.Utc),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000002"),
                             Price = 35m,
-                            StartTime = new DateTime(2026, 4, 11, 21, 30, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2027, 4, 11, 19, 30, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-000000000003"),
-                            EndTime = new DateTime(2026, 4, 12, 18, 28, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2027, 4, 12, 16, 28, 0, 0, DateTimeKind.Utc),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000003"),
                             Price = 25m,
-                            StartTime = new DateTime(2026, 4, 12, 16, 0, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2027, 4, 12, 14, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-000000000004"),
-                            EndTime = new DateTime(2026, 4, 12, 21, 56, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2027, 4, 12, 19, 56, 0, 0, DateTimeKind.Utc),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000004"),
                             Price = 45m,
-                            StartTime = new DateTime(2026, 4, 12, 19, 0, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2027, 4, 12, 17, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-000000000005"),
-                            EndTime = new DateTime(2026, 4, 13, 22, 49, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 12, 13, 20, 49, 0, 0, DateTimeKind.Utc),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000005"),
                             Price = 35m,
-                            StartTime = new DateTime(2026, 4, 13, 20, 0, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 12, 13, 18, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-000000000006"),
-                            EndTime = new DateTime(2026, 4, 11, 13, 0, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 5, 11, 11, 0, 0, 0, DateTimeKind.Utc),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000001"),
                             Price = 40m,
-                            StartTime = new DateTime(2026, 4, 11, 9, 0, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 5, 11, 7, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-000000000007"),
-                            EndTime = new DateTime(2026, 4, 12, 14, 0, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2027, 1, 12, 12, 0, 0, 0, DateTimeKind.Utc),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000001"),
                             Price = 40m,
-                            StartTime = new DateTime(2026, 4, 12, 10, 0, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2027, 1, 12, 8, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-000000000008"),
-                            EndTime = new DateTime(2026, 4, 13, 16, 36, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2027, 1, 13, 14, 36, 0, 0, DateTimeKind.Utc),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000002"),
                             Price = 50m,
-                            StartTime = new DateTime(2026, 4, 13, 14, 30, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2027, 1, 13, 12, 30, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-000000000009"),
-                            EndTime = new DateTime(2026, 4, 11, 17, 28, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 5, 11, 15, 28, 0, 0, DateTimeKind.Utc),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000003"),
                             Price = 45m,
-                            StartTime = new DateTime(2026, 4, 11, 15, 0, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 5, 11, 13, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-000000000010"),
-                            EndTime = new DateTime(2026, 4, 13, 13, 49, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 12, 11, 15, 28, 0, 0, DateTimeKind.Utc),
+                            MovieId = new Guid("10000000-0000-0000-0000-000000000003"),
+                            Price = 45m,
+                            StartTime = new DateTime(2026, 12, 11, 13, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000011"),
+                            EndTime = new DateTime(2027, 12, 31, 11, 50, 0, 0, DateTimeKind.Utc),
                             MovieId = new Guid("10000000-0000-0000-0000-000000000005"),
                             Price = 35m,
-                            StartTime = new DateTime(2026, 4, 13, 9, 0, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2027, 12, 31, 7, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 

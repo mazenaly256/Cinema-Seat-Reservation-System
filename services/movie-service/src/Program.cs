@@ -16,7 +16,7 @@ if (string.IsNullOrWhiteSpace(dbConnectionString))
 
 builder.Services.AddControllers();
 
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(dbConnectionString));
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(dbConnectionString));
 builder.Services.AddScoped<IMovieService, MovieService>();
 builder.Services.AddScoped<IShowtimeService, ShowtimeService>();
 

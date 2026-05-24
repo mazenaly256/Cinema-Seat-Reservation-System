@@ -10,7 +10,7 @@ public class ReservationConfiguration : IEntityTypeConfiguration<Reservation>
     {
         builder.ToTable("Reservations");
 
-        builder.ToTable(t => t.HasCheckConstraint("CK_SeatNumber_Format", "SeatNumber LIKE '[A-D][1-4]'"));
+        builder.ToTable(t => t.HasCheckConstraint("CK_SeatNumber_Format", "\"SeatNumber\" ~ '^[A-D][1-4]$'"));
 
         builder.HasKey(r => new { r.ShowtimeId, r.SeatNumber});
 

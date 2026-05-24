@@ -13,7 +13,7 @@ public class GenreConfiguration : IEntityTypeConfiguration<Genre>
         builder.HasKey(g => g.Id);
 
         builder.Property(g => g.Id)
-            .HasDefaultValueSql("NEWSEQUENTIALID()");
+            .HasDefaultValueSql("gen_random_uuid()");
 
 
         builder.Property(g => g.Name)

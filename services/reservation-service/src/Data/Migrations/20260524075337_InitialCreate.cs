@@ -15,9 +15,9 @@ namespace reservation_service.Data.Migrations
                 name: "Payments",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWSEQUENTIALID()"),
-                    PaidAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    PaidAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    PaidAmount = table.Column<decimal>(type: "numeric", nullable: false),
+                    PaidAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -28,28 +28,28 @@ namespace reservation_service.Data.Migrations
                 name: "SeatHolds",
                 columns: table => new
                 {
-                    ShowtimeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    SeatNumber = table.Column<string>(type: "nvarchar(2)", maxLength: 2, nullable: false),
-                    HeldUntil = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    ShowtimeId = table.Column<Guid>(type: "uuid", nullable: false),
+                    SeatNumber = table.Column<string>(type: "character varying(2)", maxLength: 2, nullable: false),
+                    HeldUntil = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_SeatHolds", x => new { x.ShowtimeId, x.SeatNumber });
-                    table.CheckConstraint("CK_SeatNumber_Format1", "SeatNumber LIKE '[A-D][1-4]'");
+                    table.CheckConstraint("CK_SeatNumber_Format", "\"SeatNumber\" ~ '^[A-D][1-4]$'");
                 });
 
             migrationBuilder.CreateTable(
                 name: "Reservations",
                 columns: table => new
                 {
-                    ShowtimeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    SeatNumber = table.Column<string>(type: "nvarchar(2)", maxLength: 2, nullable: false),
-                    PaymentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    ShowtimeId = table.Column<Guid>(type: "uuid", nullable: false),
+                    SeatNumber = table.Column<string>(type: "character varying(2)", maxLength: 2, nullable: false),
+                    PaymentId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Reservations", x => new { x.ShowtimeId, x.SeatNumber });
-                    table.CheckConstraint("CK_SeatNumber_Format", "SeatNumber LIKE '[A-D][1-4]'");
+                    table.CheckConstraint("CK_SeatNumber_Format", "\"SeatNumber\" ~ '^[A-D][1-4]$'");
                     table.ForeignKey(
                         name: "FK_Reservations_Payments_PaymentId",
                         column: x => x.PaymentId,

@@ -2,9 +2,9 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using reservation_service.Data;
 
 #nullable disable
@@ -12,7 +12,7 @@ using reservation_service.Data;
 namespace reservation_service.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260418170358_InitialCreate")]
+    [Migration("20260524075337_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -20,23 +20,23 @@ namespace reservation_service.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.5")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("ProductVersion", "10.0.4")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("reservation_service.Models.Payment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<decimal>("PaidAmount")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<DateTime>("PaidAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -46,14 +46,14 @@ namespace reservation_service.Data.Migrations
             modelBuilder.Entity("reservation_service.Models.Reservation", b =>
                 {
                     b.Property<Guid>("ShowtimeId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("SeatNumber")
                         .HasMaxLength(2)
-                        .HasColumnType("nvarchar(2)");
+                        .HasColumnType("character varying(2)");
 
                     b.Property<Guid>("PaymentId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.HasKey("ShowtimeId", "SeatNumber");
 
@@ -62,28 +62,27 @@ namespace reservation_service.Data.Migrations
 
                     b.ToTable("Reservations", null, t =>
                         {
-                            t.HasCheckConstraint("CK_SeatNumber_Format", "SeatNumber LIKE '[A-D][1-4]'");
+                            t.HasCheckConstraint("CK_SeatNumber_Format", "\"SeatNumber\" ~ '^[A-D][1-4]$'");
                         });
                 });
 
             modelBuilder.Entity("reservation_service.Models.SeatHold", b =>
                 {
                     b.Property<Guid>("ShowtimeId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("SeatNumber")
                         .HasMaxLength(2)
-                        .HasColumnType("nvarchar(2)");
+                        .HasColumnType("character varying(2)");
 
                     b.Property<DateTime>("HeldUntil")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("ShowtimeId", "SeatNumber");
 
                     b.ToTable("SeatHolds", null, t =>
                         {
-                            t.HasCheckConstraint("CK_SeatNumber_Format", "SeatNumber LIKE '[A-D][1-4]'")
-                                .HasName("CK_SeatNumber_Format1");
+                            t.HasCheckConstraint("CK_SeatNumber_Format", "\"SeatNumber\" ~ '^[A-D][1-4]$'");
                         });
                 });
 
