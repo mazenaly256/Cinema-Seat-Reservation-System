@@ -13,7 +13,7 @@ public class MovieConfiguration : IEntityTypeConfiguration<Movie>
         builder.HasKey(m => m.Id);
 
         builder.Property(m => m.Id)
-            .HasDefaultValueSql("NEWSEQUENTIALID()");
+            .HasDefaultValueSql("gen_random_uuid()");
 
         builder.Property(m => m.Name)
             .IsRequired()

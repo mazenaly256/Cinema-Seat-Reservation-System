@@ -20,7 +20,7 @@ public class ShowtimeService(ApplicationDbContext context) : IShowtimeService
 
         if (status is not null)
         {
-            showtimes = showtimes.Where(st => st.StartTime > DateTime.Now);
+            showtimes = showtimes.Where(st => st.StartTime > DateTime.UtcNow);
         }
 
         if (from.HasValue)
@@ -63,7 +63,7 @@ public class ShowtimeService(ApplicationDbContext context) : IShowtimeService
             throw new InvalidOperationException($"Showtime must have a price.");
         }
 
-        if (showtimeDtoFromRequest.StartTime <= DateTime.Now)
+        if (showtimeDtoFromRequest.StartTime <= DateTime.UtcNow)
         {
             throw new InvalidOperationException($"Can not make showtime's start date in the past.");
         }
@@ -103,7 +103,7 @@ public class ShowtimeService(ApplicationDbContext context) : IShowtimeService
             }
         }
 
-        if (showtimeDtoFromRequest.StartTime is not null && showtimeDtoFromRequest.StartTime <= DateTime.Now)
+        if (showtimeDtoFromRequest.StartTime is not null && showtimeDtoFromRequest.StartTime <= DateTime.UtcNow)
         {
             throw new InvalidOperationException($"Can not make showtime's start date in the past.");
         }
@@ -131,6 +131,6 @@ public class ShowtimeService(ApplicationDbContext context) : IShowtimeService
 
     public async Task<bool> CheckIfShowtimeIsUpcomingByIdAsync(Guid showtimeId, CancellationToken ct)
     {
-        return await context.Showtimes.AnyAsync(st => st.Id == showtimeId && st.StartTime > DateTime.Now, ct);
+        return await context.Showtimes.AnyAsync(st => st.Id == showtimeId && st.StartTime > DateTime.UtcNow, ct);
     }
 }

@@ -50,14 +50,14 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
 
         try
         {
-            context.SeatHolds.RemoveRange(context.SeatHolds.Where(sh => sh.HeldUntil <= DateTime.Now));
+            context.SeatHolds.RemoveRange(context.SeatHolds.Where(sh => sh.HeldUntil <= DateTime.UtcNow));
             await context.SaveChangesAsync(ct);
 
             var seatTemporaryLock = new SeatHold
             {
                 ShowtimeId = reservationDtoFromRequest.ShowtimeId,
                 SeatNumber = reservationDtoFromRequest.SeatNumber,
-                HeldUntil = DateTime.Now.AddMinutes(10)
+                HeldUntil = DateTime.UtcNow.AddMinutes(10)
             };
 
 
@@ -108,7 +108,7 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
                 }
             }
 
-            var mockPayment = new Payment { PaidAmount = showtime!.Price, PaidAt = DateTime.Now };
+            var mockPayment = new Payment { PaidAmount = showtime!.Price, PaidAt = DateTime.UtcNow };
             await context.Payments.AddAsync(mockPayment, ct);
             await context.SaveChangesAsync(ct);
             #endregion
@@ -135,7 +135,7 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
             // the message should be logged here
 
             
-            throw new InvalidOperationException($"The seat is locked, try again after a while or choose another seat.");
+            throw new InvalidOperationException($"The seat is locked right now, try again after a while or choose another seat.");
         }
 
         catch (InvalidOperationException)

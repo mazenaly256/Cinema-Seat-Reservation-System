@@ -3,56 +3,14 @@ networks:
     driver: bridge
 
 services:
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=Password123!
-    ports:
-      - "1433:1433"
-    networks:
-      - cinema-reservation-system-network
-
-  identity-db-mongo-server:
-    image: mongo:latest
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=Password123!
-    ports:
-      - "27017:27017"
-    networks:
-      - cinema-reservation-system-network
-
-  identity-db-ui:
-    image: mongo-express:latest
-    container_name: identity_db_web_ui
-    environment:
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=Password123!
-      - ME_CONFIG_MONGODB_SERVER=identity-db-mongo-server
-      - ME_CONFIG_MONGODB_AUTH_DATABASE=admin
-      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
-      - ME_CONFIG_OPTIONS_EDITORTHEME=default
-    ports:
-      - "8081:8081"
-    depends_on:
-      - identity-db-mongo-server
-    networks:
-      - cinema-reservation-system-network
-
-  movie-service:
+  movie:
     build:
       context: .
       dockerfile: movie-service/src/Dockerfile
-
-    # Removed the ports section, hence the service can not be accessed directly from the host machine
-
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__Default=Server=sqlserver;Database=MovieServiceDB;User Id=sa;Password=Password123!;TrustServerCertificate=True;
-    depends_on:
-      - sqlserver
+      - ConnectionStrings__Default=${MOVIE_SERVICE_DATABASE_CONNECTION_STRING}
     networks:
       - cinema-reservation-system-network
     deploy:
@@ -61,21 +19,17 @@ services:
           cpus: "0.5"
           memory: 256M
 
-  reservation-service:
+  reservation:
     build:
       context: .
       dockerfile: reservation-service/src/Dockerfile
-
-    # Removed the ports section, hence the service can not be accessed directly from the host machine
-
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - movieServiceBaseUrl=http://movie-service:8080
-      - ConnectionStrings__Default=Server=sqlserver;Database=ReservationServiceDB;User Id=sa;Password=Password123!;TrustServerCertificate=True;
+      - movieServiceBaseUrl=http://movie:8080
+      - ConnectionStrings__Default=${RESERVATION_SERVICE_DATABASE_CONNECTION_STRING}
     depends_on:
-      - sqlserver
-      - movie-service
+      - movie
     networks:
       - cinema-reservation-system-network
     deploy:
@@ -84,7 +38,7 @@ services:
           cpus: "0.5"
           memory: 256M
 
-  api-gateway-service:
+  api-gateway:
     build:
       context: .
       dockerfile: api-gateway-service/src/Dockerfile
@@ -93,20 +47,32 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ReverseProxy__Routes__movies-route__ClusterId=movie-service-containers
-      - ReverseProxy__Routes__movies-route__Match__Path=/api/movies/{**catch-all}
-      - ReverseProxy__Routes__showtimes-route__ClusterId=movie-service-containers
-      - ReverseProxy__Routes__showtimes-route__Match__Path=/api/showtimes/{**catch-all}
-      - ReverseProxy__Routes__reservations-route__ClusterId=reservation-service-containers
-      - ReverseProxy__Routes__reservations-route__Match__Path=/api/reservations/{**catch-all}
-      - ReverseProxy__Routes__seats-route__ClusterId=reservation-service-containers
-      - ReverseProxy__Routes__seats-route__Match__Path=/api/seats/{**catch-all}
-      - ReverseProxy__Clusters__movie-service-containers__Destinations__destination1__Address=http://movie-service:8080
-      - ReverseProxy__Clusters__reservation-service-containers__Destinations__destination1__Address=http://reservation-service:8080
+      - ReverseProxy__Clusters__movie-cluster__Destinations__destination1__Address=http://movie:8080
+      - ReverseProxy__Clusters__reservation-cluster__Destinations__destination1__Address=http://reservation:8080
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY}
     depends_on:
-      - sqlserver
-      - movie-service
-      - reservation-service
+      - movie
+      - reservation
+    networks:
+      - cinema-reservation-system-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  identity:
+    build:
+      context: .
+      dockerfile: identity-service/src/Dockerfile
+    ports:
+      - 5089:8080
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - MongoDbSettings__ConnectionString=${IDENTITY_SERVICE_MONGO_DATABASE_CONNECTION_STRING}
+      - MongoDbSettings__DatabaseName=identity_db
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY}
     networks:
       - cinema-reservation-system-network
     deploy:

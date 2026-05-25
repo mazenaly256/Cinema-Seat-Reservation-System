@@ -23,9 +23,9 @@ public class SeatService(ApplicationDbContext context, IConfiguration configurat
         }
 
         var reservedSeats = context.Reservations.Where(r => r.ShowtimeId == showtimeId).Select(r => r.SeatNumber);
-        var heldSeats = context.SeatHolds.Where(sh => sh.ShowtimeId == showtimeId && sh.HeldUntil > DateTime.Now).Select(sh => sh.SeatNumber);
+        var heldSeats = context.SeatHolds.Where(sh => sh.ShowtimeId == showtimeId && sh.HeldUntil > DateTime.UtcNow).Select(sh => sh.SeatNumber);
 
-        return await reservedSeats.Union(heldSeats).ToHashSetAsync();
+        return await reservedSeats.Union(heldSeats).ToHashSetAsync(ct);
     }
 
     public async Task<List<string>> GetAvailableSeatsAsync(Guid showtimeId, CancellationToken ct)

@@ -6,8 +6,17 @@ using System.Text;
 
 namespace identity_service;
 
-public class AuthenticationService(IConfiguration configuration)
+public class AuthenticationService
 {
+    private readonly IConfiguration _configuration;
+    private readonly IMongoCollection<ApplicationUser> _usersCollection;
+
+    public AuthenticationService(IConfiguration configuration, IMongoClient mongoClient)
+    {
+        _configuration = configuration;
+        _usersCollection = mongoClient.GetDatabase(configuration.GetSection("MongoDbSettings")["DatabaseName"]).GetCollection<ApplicationUser>("users");
+    }
+
     public async Task<string?> IssueJwtTokenAsync(string Email, string Password)
     {
         var user = await GetUserFromDatabaseAsync(Email, Password);
@@ -16,7 +25,7 @@ public class AuthenticationService(IConfiguration configuration)
             return null;
 
 
-        string secretKey = configuration.GetSection("JwtSettings")["SecretKey"]!;
+        string secretKey = _configuration.GetSection("JwtSettings")["SecretKey"]!;
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
         var claims = new List<Claim>
@@ -44,14 +53,9 @@ public class AuthenticationService(IConfiguration configuration)
         return jwtTokenString;
     }
 
-
     private async Task<ApplicationUser?> GetUserFromDatabaseAsync(string Email, string Password)
     {
-        var client = new MongoClient("mongodb://admin:Password123!@localhost:27017");
-        var db = client.GetDatabase("identity_db");
-        var users = db.GetCollection<ApplicationUser>("users");
-
-        var user = await users.Find(x => x.Email == Email).SingleOrDefaultAsync();
+        var user = await _usersCollection.Find(x => x.Email == Email).SingleOrDefaultAsync();
         bool passwordCheck = BCrypt.Net.BCrypt.Verify(Password, user.PasswordHash);
 
         return passwordCheck ? user : null;
