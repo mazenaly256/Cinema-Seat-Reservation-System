@@ -19,7 +19,7 @@ public class MovieService(ApplicationDbContext context) : IMovieService
 
     public IEnumerable<MovieResponseDto> GetMoviesWithUpcomingShowtimes(CancellationToken ct)
     {
-        var movies = context.Movies.Where(m => m.Showtimes.Any(st => st.StartTime > DateTime.Now)).Include(m => m.Genres).ThenInclude(mg => mg.Genre).Select(MovieResponseDto.FromModel);
+        var movies = context.Movies.Where(m => m.Showtimes.Any(st => st.StartTime > DateTime.UtcNow)).Include(m => m.Genres).ThenInclude(mg => mg.Genre).Select(MovieResponseDto.FromModel);
 
         return movies.ToList();
     }
