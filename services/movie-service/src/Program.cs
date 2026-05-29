@@ -48,6 +48,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.UseCors();
+
 app.MapControllers();
 
 app.MapOpenApi("/movie-service/api-documentation");
