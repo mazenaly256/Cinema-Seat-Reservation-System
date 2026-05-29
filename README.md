@@ -14,3 +14,6 @@ This system is a multi-service ecosystem designed to demonstrate scalable backen
 - **Reservation Service:** Responsible for seats layout representation and seat reservation.
 - **Identity Service:** Acts as the centralized Identity Provider (IdP) for the system.
 - **API Gateway:** Centralizes the logic of authentication and apply rate limits and timeouts for requests.
+
+## API Documentation
+https://www.postman.com/mazenaly256-3830648/workspace/cinema-seat-reservation-system-api-documentation
