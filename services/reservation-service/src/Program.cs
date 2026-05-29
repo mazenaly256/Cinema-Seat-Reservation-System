@@ -43,10 +43,10 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.UseCors();
+
 app.MapControllers();
 
 app.MapOpenApi("/reservation-service/api-documentation");
-
-app.UseCors();
 
 app.Run();
