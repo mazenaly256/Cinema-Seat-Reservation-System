@@ -17,12 +17,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql
 builder.Services.AddScoped<IReservationService, ReservationService>();
 builder.Services.AddScoped<ISeatService, SeatService>();
 
-builder.Services.AddOpenApi("reservation-service-api-doc");
+builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
 app.MapControllers();
 
-app.MapOpenApi();
+app.MapOpenApi("/reservation-service/api-documentation");
 
 app.Run();
