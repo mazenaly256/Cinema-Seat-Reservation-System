@@ -35,10 +35,18 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy => policy.WithOrigins("https://editor.swagger.io"));
+});
+
 var app = builder.Build();
 
 app.MapControllers();
 
 app.MapOpenApi("/reservation-service/api-documentation");
+
+app.UseCors();
 
 app.Run();
