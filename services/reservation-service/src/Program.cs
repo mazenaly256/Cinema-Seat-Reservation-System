@@ -61,6 +61,4 @@ app.MapControllers();
 
 app.MapOpenApi("/reservation-service/api-documentation");
 
-app.UseCors();
-
 app.Run();

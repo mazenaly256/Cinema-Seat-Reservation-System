@@ -66,6 +66,4 @@ app.MapControllers();
 
 app.MapOpenApi("/movie-service/api-documentation");
 
-app.UseCors();
-
 app.Run();
