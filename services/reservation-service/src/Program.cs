@@ -3,6 +3,7 @@ using Microsoft.OpenApi;
 using reservation_service.Data;
 using reservation_service.Services.Implementations;
 using reservation_service.Services.Interfaces;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,23 +32,33 @@ builder.Services.AddOpenApi(options =>
             }
         ];
 
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes = new Dictionary<string, IOpenApiSecurityScheme>
+        {
+            ["Bearer"] = new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT"
+            }
+        };
+
+        document.Security ??= new List<OpenApiSecurityRequirement>();
+        document.Security.Add(
+            new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+            }
+        );
+
         return Task.CompletedTask;
     });
 });
 
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy => policy.WithOrigins("https://editor.swagger.io").AllowAnyMethod().AllowAnyHeader());
-});
-
 var app = builder.Build();
-
-app.UseCors();
 
 app.MapControllers();
 
 app.MapOpenApi("/reservation-service/api-documentation");
-
-app.UseCors();
 
 app.Run();
