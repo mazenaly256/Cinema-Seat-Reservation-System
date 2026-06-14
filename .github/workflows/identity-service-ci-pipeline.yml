@@ -1,0 +1,27 @@
+name: Identity Service CI Pipeline
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "services/identity-service/src/**"
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "services/identity-service/src/**"
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore & Build Service's Source Code
+        run: |
+          dotnet restore services/identity-service/src/identity-service.csproj
+          dotnet build services/identity-service/src/identity-service.csproj --no-restore --configuration Release
