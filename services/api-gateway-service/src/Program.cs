@@ -23,7 +23,7 @@ builder.Services.AddRateLimiter(options =>
 
 builder.Services.AddRequestTimeouts(options =>
 {
-    options.AddPolicy("gateway-timeout", TimeSpan.FromSeconds(5));
+    options.AddPolicy("gateway-timeout", TimeSpan.FromSeconds(8));
 });
 
 builder.Services.AddAuthentication(options =>
