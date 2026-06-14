@@ -1,0 +1,27 @@
+name: API Gateway Service CI Pipeline
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "services/api-gateway-service/src/**"
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "services/api-gateway-service/src/**"
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore & Build Service's Source Code
+        run: |
+          dotnet restore services/api-gateway-service/src/api-gateway-service.csproj
+          dotnet build services/api-gateway-service/src/api-gateway-service.csproj --no-restore --configuration Release
