@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using Polly;
+using Polly.Extensions.Http;
+using Polly.Timeout;
 using reservation_service.Data;
 using reservation_service.Services.Implementations;
 using reservation_service.Services.Interfaces;
@@ -54,6 +57,15 @@ builder.Services.AddOpenApi(options =>
         return Task.CompletedTask;
     });
 });
+
+builder.Services.AddHttpClient("movie-service", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["movieServiceBaseUrl"]!);
+})
+    .AddPolicyHandler(HttpPolicyExtensions.HandleTransientHttpError()
+        .WaitAndRetryAsync(2, retryAttemptNumber => TimeSpan.FromMilliseconds(200 * retryAttemptNumber)))
+    .AddPolicyHandler(HttpPolicyExtensions.HandleTransientHttpError()
+        .CircuitBreakerAsync(3, TimeSpan.FromSeconds(20)));
 
 var app = builder.Build();
 

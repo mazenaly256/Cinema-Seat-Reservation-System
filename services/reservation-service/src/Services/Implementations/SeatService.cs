@@ -4,22 +4,19 @@ using reservation_service.Services.Interfaces;
 
 namespace reservation_service.Services.Implementations;
 
-public class SeatService(ApplicationDbContext context, IConfiguration configuration) : ISeatService
+public class SeatService(ApplicationDbContext context, IConfiguration configuration, IHttpClientFactory httpClientFactory) : ISeatService
 {
     public async Task<HashSet<string>> GetReservedAndLockedSeatsAsync(Guid showtimeId, CancellationToken ct)
     {
-        using (HttpClient client = new HttpClient())
+        string showtimeUrl = $"api/showtimes/{showtimeId}";
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, showtimeUrl);
+
+        var movieServiceHttpClient = httpClientFactory.CreateClient("movie-service");
+        HttpResponseMessage response = await movieServiceHttpClient.SendAsync(request, ct);
+
+        if (!response.IsSuccessStatusCode)
         {
-            string url = $"{configuration["movieServiceBaseUrl"]}/api/showtimes/{showtimeId}";
-
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, url);
-
-            HttpResponseMessage response = await client.SendAsync(request, ct);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new ArgumentException("No upcoming showtime with the sent ID");
-            }
+            throw new ArgumentException("No upcoming showtime with the sent ID");
         }
 
         var reservedSeats = context.Reservations.Where(r => r.ShowtimeId == showtimeId).Select(r => r.SeatNumber);

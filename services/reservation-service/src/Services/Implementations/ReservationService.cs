@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 
 namespace reservation_service.Services.Implementations;
 
-public class ReservationService(ApplicationDbContext context, IConfiguration configuration) : IReservationService
+public class ReservationService(ApplicationDbContext context, IConfiguration configuration, IHttpClientFactory httpClientFactory) : IReservationService
 {
     public async Task AddNewReservationAsync(CreateReservationRequestDto reservationDtoFromRequest, CancellationToken ct)
     {
@@ -24,28 +24,24 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
             throw new ArgumentException("The seat number format must be two characters, first is a letter from A to D and second is a digit from 1 to 4");
         }
 
-        using (HttpClient client = new HttpClient())
+        string showtimeUrl = $"api/showtimes/{reservationDtoFromRequest.ShowtimeId}";
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, showtimeUrl);
+
+        var movieServiceHttpClient = httpClientFactory.CreateClient("movie-service");
+        HttpResponseMessage response = await movieServiceHttpClient.SendAsync(request, ct);
+
+        if (!response.IsSuccessStatusCode)
         {
-            string url = $"{configuration["movieServiceBaseUrl"]}/api/showtimes/{reservationDtoFromRequest.ShowtimeId}";
-
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, url);
-
-            HttpResponseMessage response = await client.SendAsync(request, ct);
-
-            if (!response.IsSuccessStatusCode)
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    throw new ArgumentException("No upcoming showtime with the sent ID");
-                }
+                throw new ArgumentException("No upcoming showtime with the sent ID");
+            }
 
-                else
-                {
-                    throw new InvalidOperationException("Failed to retrieve the showtime data.");
-                }
+            else
+            {
+                throw new InvalidOperationException("Failed to retrieve the showtime data.");
             }
         }
-
 
 
         try
@@ -81,31 +77,26 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
 
             ShowtimeIntegrationDto? showtime;
 
-            using (HttpClient client = new HttpClient())
+            response = await movieServiceHttpClient.GetAsync(showtimeUrl, ct);
+
+            if (!response.IsSuccessStatusCode)
             {
-                string url = $"{configuration["movieServiceBaseUrl"]}/api/showtimes/{reservationDtoFromRequest.ShowtimeId}";
-
-                var response = await client.GetAsync(url, ct);
-
-                if (!response.IsSuccessStatusCode)
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                    {
-                        throw new ArgumentException("No upcoming showtime with the sent ID");
-                    }
-
-                    else
-                    {
-                        throw new InvalidOperationException("Failed to retrieve the showtime data.");
-                    }
+                    throw new ArgumentException("No upcoming showtime with the sent ID");
                 }
 
-                showtime = await response.Content.ReadFromJsonAsync<ShowtimeIntegrationDto>(ct);
-
-                if (showtime is null)
+                else
                 {
                     throw new InvalidOperationException("Failed to retrieve the showtime data.");
                 }
+            }
+
+            showtime = await response.Content.ReadFromJsonAsync<ShowtimeIntegrationDto>(ct);
+
+            if (showtime is null)
+            {
+                throw new InvalidOperationException("Failed to retrieve the showtime data.");
             }
 
             var mockPayment = new Payment { PaidAmount = showtime!.Price, PaidAt = DateTime.UtcNow };
