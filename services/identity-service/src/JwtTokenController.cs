@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using identity_service.Custom_Exceptions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace identity_service;
 
@@ -7,8 +8,17 @@ namespace identity_service;
 public class JwtTokenController(AuthenticationService authenticationService) : ControllerBase
 {
     [HttpPost("login")]
-    public async Task<string> GetAccessTokenAsync(IssueJwtTokenRequest request)
+    public async Task<ActionResult<string>> GetAccessTokenAsync(IssueJwtTokenRequest request)
     {
-        return (await authenticationService.IssueJwtTokenAsync(request.Email, request.Password));
+        try
+        {
+            string jwtToken = await authenticationService.IssueJwtTokenAsync(request.Email, request.Password);
+
+            return jwtToken;
+        }
+        catch(InvalidCredentialsException ex)
+        {
+            return BadRequest($"{ex.Message} User with entered email and password does not exist in DB.");
+        }
     }
 }

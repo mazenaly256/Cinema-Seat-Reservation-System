@@ -31,14 +31,19 @@ public class ReservationController(IReservationService reservationService) : Con
             return BadRequest(ex.Message);
         }
 
-        catch (InvalidOperationException ex)
+        catch (InvalidOperationException ex) when (ex.Message.Contains("Reservation Conflict."))
         {
             return Conflict(ex.Message);
         }
 
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+
         catch (Exception ex)
         {
-            return StatusCode(500);
+            return StatusCode(500, ex.Message);
         }
     }
 }

@@ -37,5 +37,15 @@ public class SeatController(ISeatService seatService) : ControllerBase
         {
             return BadRequest(ex.Message);
         }
+
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 }

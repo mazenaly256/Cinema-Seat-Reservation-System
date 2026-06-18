@@ -90,9 +90,13 @@ public class ShowtimeController(IShowtimeService showtimeService, IValidator<Cre
 
             return CreatedAtRoute("GetShowtimeById", new {showtimeId = newShowtimeId}, await showtimeService.GetShowtimeByIdAsync((Guid)newShowtimeId, ct));
         }
-        catch (InvalidOperationException ex)
+        catch (ArgumentException ex)
         {
             return BadRequest($"Invalid data. {ex.Message}");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
         }
     }
 
@@ -139,7 +143,7 @@ public class ShowtimeController(IShowtimeService showtimeService, IValidator<Cre
     {
         if (!await showtimeService.ExistsByIdAsync(showtimeId, ct))
         {
-            return BadRequest($"Showtime with ID: {showtimeId} does NOT exist.");
+            return NotFound($"Showtime with ID: {showtimeId} does NOT exist.");
         }
 
         try
@@ -148,9 +152,9 @@ public class ShowtimeController(IShowtimeService showtimeService, IValidator<Cre
 
             return NoContent();
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex)
         {
-            return StatusCode(500, $"Error while deleting the movie. {ex.Message}");
+            return StatusCode(500, $"Error while deleting the showtime. {ex.Message}");
         }
     }
 }
