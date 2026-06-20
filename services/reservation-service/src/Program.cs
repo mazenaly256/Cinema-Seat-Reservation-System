@@ -1,14 +1,37 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Polly;
 using Polly.Extensions.Http;
 using Polly.Timeout;
 using reservation_service.Data;
 using reservation_service.Services.Implementations;
 using reservation_service.Services.Interfaces;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Serilog;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, loggerConfiguration) =>
+{
+    loggerConfiguration.ReadFrom.Configuration(builder.Configuration);
+});
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("Reservation Service"))
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddOtlpExporter(otlp =>
+            {
+                otlp.Protocol = OtlpExportProtocol.HttpProtobuf;
+                otlp.Endpoint = new Uri(builder.Configuration["OpenTelemetryExporter:DestinationEndpoint"]!);
+                otlp.Headers = $"Authorization=Basic {Convert.ToBase64String(Encoding.ASCII.GetBytes($"{builder.Configuration["OpenTelemetryExporter:CloudInstanceID"]}:{builder.Configuration["OpenTelemetryExporter:CloudInstanceApiToken"]}"))}";
+            });
+    });
 
 var dbConnectionString = builder.Configuration.GetConnectionString("Default");
 if (string.IsNullOrWhiteSpace(dbConnectionString))
@@ -70,6 +93,8 @@ builder.Services.AddHttpClient("movie-service", client =>
 var app = builder.Build();
 
 app.MapControllers();
+
+app.UseSerilogRequestLogging();
 
 app.MapOpenApi("/reservation-service/api-documentation");
 
