@@ -82,6 +82,9 @@ services:
       - MongoDbSettings__ConnectionString=${IDENTITY_SERVICE_MONGO_DATABASE_CONNECTION_STRING}
       - MongoDbSettings__DatabaseName=identity_db
       - JwtSettings__SecretKey=${JWT_SECRET_KEY}
+      - OpenTelemetryExporter__DestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_DESTINATION_ENDPOINT}
+      - OpenTelemetryExporter__CloudInstanceID=${CLOUD_INSTANCE_ID}
+      - OpenTelemetryExporter__CloudInstanceApiToken=${CLOUD_INSTANCE_API_TOKEN}
     networks:
       - cinema-reservation-system-network
     deploy:
