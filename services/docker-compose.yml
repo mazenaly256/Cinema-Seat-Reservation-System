@@ -14,6 +14,8 @@ services:
       - OpenTelemetryExporter__DestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_DESTINATION_ENDPOINT}
       - OpenTelemetryExporter__CloudInstanceID=${CLOUD_INSTANCE_ID}
       - OpenTelemetryExporter__CloudInstanceApiToken=${CLOUD_INSTANCE_API_TOKEN}
+      - Serilog__MinimumLevel__Default=Information
+      - Serilog__MinimumLevel__Override__Microsoft=Error
     networks:
       - cinema-reservation-system-network
     deploy:
@@ -34,6 +36,9 @@ services:
       - OpenTelemetryExporter__DestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_DESTINATION_ENDPOINT}
       - OpenTelemetryExporter__CloudInstanceID=${CLOUD_INSTANCE_ID}
       - OpenTelemetryExporter__CloudInstanceApiToken=${CLOUD_INSTANCE_API_TOKEN}
+      - Serilog__MinimumLevel__Default=Information
+      - Serilog__MinimumLevel__Override__Microsoft=Error
+      - Serilog__MinimumLevel__Override__System=Warning
     depends_on:
       - movie
     networks:
@@ -59,6 +64,8 @@ services:
       - OpenTelemetryExporter__DestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_DESTINATION_ENDPOINT}
       - OpenTelemetryExporter__CloudInstanceID=${CLOUD_INSTANCE_ID}
       - OpenTelemetryExporter__CloudInstanceApiToken=${CLOUD_INSTANCE_API_TOKEN}
+      - Serilog__MinimumLevel__Default=Information
+      - Serilog__MinimumLevel__Override__Microsoft=Error
     depends_on:
       - movie
       - reservation
@@ -85,6 +92,8 @@ services:
       - OpenTelemetryExporter__DestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_DESTINATION_ENDPOINT}
       - OpenTelemetryExporter__CloudInstanceID=${CLOUD_INSTANCE_ID}
       - OpenTelemetryExporter__CloudInstanceApiToken=${CLOUD_INSTANCE_API_TOKEN}
+      - Serilog__MinimumLevel__Default=Information
+      - Serilog__MinimumLevel__Override__Microsoft=Error
     networks:
       - cinema-reservation-system-network
     deploy:
