@@ -2,17 +2,26 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using Serilog;
 using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Host.UseSerilog((context, loggerConfiguration) =>
+builder.Logging.ClearProviders();
+
+if (builder.Environment.IsDevelopment())
 {
-    loggerConfiguration.ReadFrom.Configuration(builder.Configuration);
+    builder.Logging.AddConsole();
+}
+
+builder.Logging.AddOpenTelemetry(options =>
+{
+    options.IncludeFormattedMessage = true;
+    options.IncludeScopes = true;       // this is for tracing-logging correlation
 });
 
 builder.Services.AddOpenTelemetry()
@@ -24,7 +33,27 @@ builder.Services.AddOpenTelemetry()
             .AddOtlpExporter(otlp =>
             {
                 otlp.Protocol = OtlpExportProtocol.HttpProtobuf;
-                otlp.Endpoint = new Uri(builder.Configuration["OpenTelemetryExporter:DestinationEndpoint"]!);
+                otlp.Endpoint = new Uri(builder.Configuration["OpenTelemetryExporter:TracingDestinationEndpoint"]!);
+                otlp.Headers = $"Authorization=Basic {Convert.ToBase64String(Encoding.ASCII.GetBytes($"{builder.Configuration["OpenTelemetryExporter:CloudInstanceID"]}:{builder.Configuration["OpenTelemetryExporter:CloudInstanceApiToken"]}"))}";
+            });
+    })
+    .WithLogging(logging =>
+    {
+        logging.AddOtlpExporter(otlp =>
+        {
+            otlp.Protocol = OtlpExportProtocol.HttpProtobuf;
+            otlp.Endpoint = new Uri(builder.Configuration["OpenTelemetryExporter:LoggingDestinationEndpoint"]!);
+            otlp.Headers = $"Authorization=Basic {Convert.ToBase64String(Encoding.ASCII.GetBytes($"{builder.Configuration["OpenTelemetryExporter:CloudInstanceID"]}:{builder.Configuration["OpenTelemetryExporter:CloudInstanceApiToken"]}"))}";
+        });
+    })
+    .WithMetrics(metrics =>
+    {
+        metrics.AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddOtlpExporter(otlp =>
+            {
+                otlp.Protocol = OtlpExportProtocol.HttpProtobuf;
+                otlp.Endpoint = new Uri(builder.Configuration["OpenTelemetryExporter:MetricsDestinationEndpoint"]!);
                 otlp.Headers = $"Authorization=Basic {Convert.ToBase64String(Encoding.ASCII.GetBytes($"{builder.Configuration["OpenTelemetryExporter:CloudInstanceID"]}:{builder.Configuration["OpenTelemetryExporter:CloudInstanceApiToken"]}"))}";
             });
     });
@@ -74,8 +103,6 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
-
-app.UseSerilogRequestLogging();
 
 app.UseCors();
 
