@@ -10,13 +10,13 @@ using System.Text.RegularExpressions;
 
 namespace reservation_service.Services.Implementations;
 
-public class ReservationService(ApplicationDbContext context, IConfiguration configuration, IHttpClientFactory httpClientFactory) : IReservationService
+public class ReservationService(ApplicationDbContext context, ILogger<ReservationService> logger, IHttpClientFactory httpClientFactory) : IReservationService
 {
     public async Task AddNewReservationAsync(CreateReservationRequestDto reservationDtoFromRequest, CancellationToken ct)
     {
         if (await context.Reservations.AnyAsync(r => r.ShowtimeId == reservationDtoFromRequest.ShowtimeId && r.SeatNumber == reservationDtoFromRequest.SeatNumber))
         {
-            throw new InvalidOperationException("The seat is already successfully reserved with a confirmed payment."); ;
+            throw new InvalidOperationException("Reservation Conflict. The seat is already successfully reserved with a confirmed payment."); ;
         }
 
         if (!Regex.IsMatch(reservationDtoFromRequest.SeatNumber, @"^[A-D][1-4]$"))
@@ -26,22 +26,36 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
 
         string showtimeUrl = $"api/showtimes/{reservationDtoFromRequest.ShowtimeId}";
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, showtimeUrl);
+        HttpResponseMessage response;
 
         var movieServiceHttpClient = httpClientFactory.CreateClient("movie-service");
-        HttpResponseMessage response = await movieServiceHttpClient.SendAsync(request, ct);
+
+        try
+        {
+            response = await movieServiceHttpClient.SendAsync(request, ct);
+        }
+
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error while trying to connect to Movie Service to check movie existence with HTTP HEAD request.");
+            
+            throw;
+        }
 
         if (!response.IsSuccessStatusCode)
         {
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                throw new ArgumentException("No upcoming showtime with the sent ID");
+                throw new ArgumentException($"No upcoming showtime with the ID: {reservationDtoFromRequest.ShowtimeId}");
             }
 
             else
             {
-                throw new InvalidOperationException("Failed to retrieve the showtime data.");
+                logger.LogWarning("Error in checking showtime existence through HTTP HEAD Request to Movie Service. Movie Service Returns {MovieServiceResponseStatusCode}", response.StatusCode);
+                throw new Exception("Failed to retrieve the showtime data.");
             }
         }
+
 
 
         try
@@ -60,7 +74,7 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
             // checks if the seat has been reserved by another thread (another request)
             if (await context.Reservations.AnyAsync(r => r.ShowtimeId == reservationDtoFromRequest.ShowtimeId && r.SeatNumber == reservationDtoFromRequest.SeatNumber))
             {
-                throw new InvalidOperationException("The seat is already successfully reserved with a confirmed payment."); ;
+                throw new InvalidOperationException("Reservation Conflict. The seat is already successfully reserved with a confirmed payment."); ;
             }
 
             await context.SeatHolds.AddAsync(seatTemporaryLock, ct);
@@ -77,7 +91,17 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
 
             ShowtimeIntegrationDto? showtime;
 
-            response = await movieServiceHttpClient.GetAsync(showtimeUrl, ct);
+            try
+            {
+                response = await movieServiceHttpClient.GetAsync(showtimeUrl, ct);
+            }
+
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error while trying to connect to Movie Service to get showtime's price.");
+
+                throw;
+            }
 
             if (!response.IsSuccessStatusCode)
             {
@@ -88,6 +112,7 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
 
                 else
                 {
+                    logger.LogError("Unable to retrieve showtime data from Movie Service. Movie Service responds with {MovieServiceResponseStatusCode} Status Code", response.StatusCode);
                     throw new InvalidOperationException("Failed to retrieve the showtime data.");
                 }
             }
@@ -96,7 +121,9 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
 
             if (showtime is null)
             {
-                throw new InvalidOperationException("Failed to retrieve the showtime data.");
+                logger.LogError("Entity mapping between services failed, Retrieved showtime data from Movie Service is incompatible with the ShowtimeIntegrationDto defined in Reservation Service");
+
+                throw new InvalidOperationException("Error while deserializing retrieved showtime data.");
             }
 
             var mockPayment = new Payment { PaidAmount = showtime!.Price, PaidAt = DateTime.UtcNow };
@@ -119,14 +146,15 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
 
             await context.Reservations.AddAsync(confirmedReservation, ct);
             await context.SaveChangesAsync(ct);
+
+            logger.LogInformation("Reservation for Seat Number: {ReservedSeatNumber} for showtime: {ShowtimeId}, has been confirmed successfully.", reservationDtoFromRequest.SeatNumber, reservationDtoFromRequest.ShowtimeId);
         }
 
         catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("PK_SeatHolds") == true)    // Race condition handling
         {
-            // the message should be logged here
-
+            logger.LogInformation(ex, "Race condition has been resolved successfully. Concurrent reservation has been handled correctly");
             
-            throw new InvalidOperationException($"The seat is locked right now, try again after a while or choose another seat.");
+            throw new InvalidOperationException($"Reservation Conflict. The seat is locked right now, try again after a while or choose another seat.");
         }
 
         catch (InvalidOperationException)
@@ -136,7 +164,7 @@ public class ReservationService(ApplicationDbContext context, IConfiguration con
 
         catch (Exception ex)
         {
-            // the message should be logged here
+            logger.LogError(ex, "Unexpected Error while try to reserve a seat.");
 
             throw;
         }
