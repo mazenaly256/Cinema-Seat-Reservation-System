@@ -8,7 +8,7 @@ using movie_service.Services.Interfaces;
 
 namespace movie_service.Services.Implementations;
 
-public class MovieService(ApplicationDbContext context) : IMovieService
+public class MovieService(ApplicationDbContext context, ILogger<MovieService> logger) : IMovieService
 {
     public IEnumerable<MovieResponseDto> GetAllMovies(CancellationToken ct)
     {
@@ -43,16 +43,37 @@ public class MovieService(ApplicationDbContext context) : IMovieService
 
     public async Task<Guid?> AddNewMovieAsync(CreateMovieRequestDto dtoFromRequest, CancellationToken ct)
     {
-        var movie = new Movie
+        try
         {
-            Name = dtoFromRequest.MovieName,
-            DurationMinutes = (int)dtoFromRequest.DurationMinutes!,
-            Genres = dtoFromRequest.GenresIds!.Select(g => new MovieGenre { GenreId = g }).ToList()
-        };
+            var movie = new Movie
+            {
+                Name = dtoFromRequest.MovieName,
+                DurationMinutes = (int)dtoFromRequest.DurationMinutes!,
+                Genres = dtoFromRequest.GenresIds!.Select(g => new MovieGenre { GenreId = g }).ToList()
+            };
 
-        await context.Movies.AddAsync(movie, ct);
+            await context.Movies.AddAsync(movie, ct);
 
-        return (await context.SaveChangesAsync(ct) > 0 ? movie.Id : null);
+            if (await context.SaveChangesAsync(ct) > 0)
+            {
+                logger.LogInformation("New Movie with ID: {NewMovieId} has been saved successfully on DB.", movie.Id);
+
+                return movie.Id;
+            }
+
+            logger.LogWarning("No movie has been added when tried to add new movie with name: {NewMovieName}.", movie.Name);
+            return null;
+        }
+        catch (OperationCanceledException ex)
+        {
+            logger.LogInformation(ex, "Adding new movie is canceled with cancellation token.");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error while adding new movie to DB.");
+            throw;
+        }
     }
 
     public async Task UpdateMovieAsync(Guid movieId, UpdateMovieRequestDto dtoFromRequest, CancellationToken ct)
@@ -61,25 +82,38 @@ public class MovieService(ApplicationDbContext context) : IMovieService
 
         if (movieFromDB is null)
         {
-            throw new InvalidOperationException($"Movie with ID: {movieId} does NOT exist.");
+            throw new KeyNotFoundException($"Movie with ID: {movieId} does NOT exist.");
         }
 
         movieFromDB.Genres = dtoFromRequest.GenresIds?.Select(g => new MovieGenre { MovieId = movieId, GenreId = g }).ToList();
         movieFromDB.DurationMinutes = dtoFromRequest.DurationMinutes;
         movieFromDB.Name = dtoFromRequest.MovieName;
 
-        await context.SaveChangesAsync(ct);
+        if (await context.SaveChangesAsync(ct) > 0)
+        {
+            logger.LogInformation("Movie with ID: {MovieId} has been updated successfully", movieId);
+        }
+
+        else
+        {
+            logger.LogWarning("Failed updating operation for movie with ID: {MovieId}", movieId);
+        }
     }
 
     public async Task DeleteMovieAsync(Guid movieId, CancellationToken ct)
     {
+        logger.LogInformation("Attemting to delete movie with ID: {MovieId}.", movieId);
+
         if (!await this.ExistsByIdAsync(movieId, ct))
         {
-            throw new InvalidOperationException($"Movie with ID: {movieId} does NOT exist.");
+            throw new KeyNotFoundException($"Movie with ID: {movieId} does NOT exist.");
         }
 
         context.Remove(context.Movies.Find(movieId)!);
 
-        await context.SaveChangesAsync(ct);
+        if (await context.SaveChangesAsync(ct) > 0)
+        {
+            logger.LogInformation("Movie with ID: {MovieId} has been successfully deleted from DB.", movieId);
+        }
     }
 }

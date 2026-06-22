@@ -4,7 +4,7 @@ using reservation_service.Services.Interfaces;
 
 namespace reservation_service.Services.Implementations;
 
-public class SeatService(ApplicationDbContext context, IConfiguration configuration, IHttpClientFactory httpClientFactory) : ISeatService
+public class SeatService(ApplicationDbContext context, ILogger<SeatService> logger, IHttpClientFactory httpClientFactory) : ISeatService
 {
     public async Task<HashSet<string>> GetReservedAndLockedSeatsAsync(Guid showtimeId, CancellationToken ct)
     {
@@ -12,11 +12,29 @@ public class SeatService(ApplicationDbContext context, IConfiguration configurat
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, showtimeUrl);
 
         var movieServiceHttpClient = httpClientFactory.CreateClient("movie-service");
-        HttpResponseMessage response = await movieServiceHttpClient.SendAsync(request, ct);
+        HttpResponseMessage response;
+
+        try
+        {
+            response = await movieServiceHttpClient.SendAsync(request, ct);
+        }
+
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error while trying to connect to Movie Service to check showtime existence (HTTP HEAD request).");
+
+            throw;
+        }
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new ArgumentException("No upcoming showtime with the sent ID");
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                throw new KeyNotFoundException($"No showtime with the ID: {showtimeId}");
+            }
+
+            logger.LogWarning("Error in retrieving showtime data from Movie Service. Movie Service returns {MovieServiceResponseStatusCode}", response.StatusCode);
+            throw new Exception("Failed to retrieve showtime data.");
         }
 
         var reservedSeats = context.Reservations.Where(r => r.ShowtimeId == showtimeId).Select(r => r.SeatNumber);

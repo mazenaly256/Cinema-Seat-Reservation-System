@@ -7,7 +7,7 @@ using movie_service.Services.Interfaces;
 
 namespace movie_service.Services.Implementations;
 
-public class ShowtimeService(ApplicationDbContext context) : IShowtimeService
+public class ShowtimeService(ApplicationDbContext context, ILogger<ShowtimeService> logger) : IShowtimeService
 {
     public IEnumerable<ShowtimeResponseDto> GetShowtimes(Guid? movieId, DateTime? from, DateTime? to, string? status)
     {
@@ -47,30 +47,29 @@ public class ShowtimeService(ApplicationDbContext context) : IShowtimeService
     {
         var movie = await context.Movies.SingleOrDefaultAsync(m => m.Id == showtimeDtoFromRequest.ShowingMovieId, ct);
 
-
         if (movie is null)
         {
-            throw new InvalidOperationException($"Movie with ID: {showtimeDtoFromRequest.ShowingMovieId} does not exist. Showtime can not be for inexistant movie.");
+            throw new KeyNotFoundException($"Movie with ID: {showtimeDtoFromRequest.ShowingMovieId} does not exist. Showtime can not be for inexistant movie.");
         }
 
         if (showtimeDtoFromRequest.StartTime is null || showtimeDtoFromRequest.EndTime is null)
         {
-            throw new InvalidOperationException($"Showtime must have start time and end time.");
+            throw new ArgumentException($"Showtime must have start time and end time.");
         }
 
         if (showtimeDtoFromRequest.Price is null)
         {
-            throw new InvalidOperationException($"Showtime must have a price.");
+            throw new ArgumentException($"Showtime must have a price.");
         }
 
         if (showtimeDtoFromRequest.StartTime <= DateTime.UtcNow)
         {
-            throw new InvalidOperationException($"Can not make showtime's start date in the past.");
+            throw new ArgumentException($"Can not make showtime's start date in the past.");
         }
 
         if ((showtimeDtoFromRequest.EndTime.Value - showtimeDtoFromRequest.StartTime.Value).TotalMinutes < movie.DurationMinutes)
         {
-            throw new InvalidOperationException($"The showtime's duration ({(showtimeDtoFromRequest.EndTime.Value - showtimeDtoFromRequest.StartTime.Value).TotalMinutes} minutes) is less than the showing movie duration ({movie.DurationMinutes} minutes).");
+            throw new ArgumentException($"The showtime's duration ({(showtimeDtoFromRequest.EndTime.Value - showtimeDtoFromRequest.StartTime.Value).TotalMinutes} minutes) is less than the showing movie duration ({movie.DurationMinutes} minutes).");
         }
 
         var showtime = new Showtime
@@ -83,16 +82,24 @@ public class ShowtimeService(ApplicationDbContext context) : IShowtimeService
 
         await context.Showtimes.AddAsync(showtime, ct);
 
-        return (await context.SaveChangesAsync(ct) > 0 ? showtime.Id : null);
+        if (await context.SaveChangesAsync(ct) > 0)
+        {
+            logger.LogInformation("New Showtime with ID: {NewShowtimeId} has been saved successfully on DB.", showtime.Id);
+
+            return showtime.Id;
+        }
+
+        logger.LogWarning("No showtime has been added when tried to add new showtime for movie with ID: {ShowedMovieId}.", showtime.MovieId);
+        return null;
     }
 
-    public async Task UpdateShowtimeAsync(Guid shwotimeId, UpdateShowtimeRequestDto showtimeDtoFromRequest, CancellationToken ct)
+    public async Task UpdateShowtimeAsync(Guid showtimeId, UpdateShowtimeRequestDto showtimeDtoFromRequest, CancellationToken ct)
     {
-        var showtimeFromDB = await context.Showtimes.Include(st => st.Movie).SingleOrDefaultAsync(st => st.Id == shwotimeId, ct);
+        var showtimeFromDB = await context.Showtimes.Include(st => st.Movie).SingleOrDefaultAsync(st => st.Id == showtimeId, ct);
 
         if (showtimeFromDB is null)
         {
-            throw new InvalidOperationException($"Showtime with ID: {shwotimeId} does NOT exist.");
+            throw new InvalidOperationException($"Showtime with ID: {showtimeId} does NOT exist.");
         }
 
         if (showtimeDtoFromRequest.StartTime is not null && showtimeDtoFromRequest.EndTime is not null)
@@ -114,14 +121,40 @@ public class ShowtimeService(ApplicationDbContext context) : IShowtimeService
         showtimeFromDB.EndTime = showtimeDtoFromRequest.EndTime ?? showtimeFromDB.EndTime;
         showtimeFromDB.Price = showtimeDtoFromRequest.Price ?? showtimeFromDB.Price;
 
-        await context.SaveChangesAsync(ct);
+        if (await context.SaveChangesAsync(ct) > 0)
+        {
+            logger.LogInformation("Showtime with ID: {Showtime} has been updated successfully", showtimeId);
+        }
+
+        else
+        {
+            logger.LogWarning("Failed updating operation for showtime with ID: {ShowtimeId}", showtimeId);
+        }
     }
 
     public async Task DeleteShowtimeAsync(Guid showtimeId, CancellationToken ct)
     {
-        context.Remove((await context.Showtimes.SingleOrDefaultAsync(st => st.Id == showtimeId, ct))!);
+        logger.LogInformation("Attemting to delete showtime with ID: {ShowtimeId}.", showtimeId);
 
-        await context.SaveChangesAsync(ct);
+        try
+        {
+            if (!await this.ExistsByIdAsync(showtimeId, ct))
+            {
+                throw new KeyNotFoundException($"Showtime with ID: {showtimeId} does NOT exist.");
+            }
+
+            context.Remove((await context.Showtimes.SingleOrDefaultAsync(st => st.Id == showtimeId, ct))!);
+
+            await context.SaveChangesAsync(ct);
+
+            logger.LogInformation("Showtime with ID: {ShowtimeId} has been deleted successfully", showtimeId);
+        }
+        catch
+        {
+            logger.LogError("Error while deleting showtime with ID: {TriedToBeDeletedShowtimeId}", showtimeId);
+
+            throw;
+        }
     }
 
     public async Task<bool> ExistsByIdAsync(Guid showtimeId, CancellationToken ct)

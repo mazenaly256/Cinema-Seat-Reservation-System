@@ -105,14 +105,14 @@ public class MovieController(IMovieService movieService, IValidator<CreateMovieR
     {
         try
         {
-            if (!await movieService.ExistsByIdAsync(movieId, ct))
-            {
-                return NotFound($"Movie with ID: {movieId} does NOT exist.");
-            }
-
             await movieService.UpdateMovieAsync(movieId, movieFromRequest, ct);
 
             return NoContent();
+        }
+
+        catch(KeyNotFoundException ex)
+        {
+            return BadRequest(ex.Message);
         }
 
         catch
@@ -139,9 +139,9 @@ public class MovieController(IMovieService movieService, IValidator<CreateMovieR
 
             return NoContent();
         }
-        catch (InvalidOperationException ex)
+        catch (KeyNotFoundException ex)
         {
-            return BadRequest($"{ex.Message}");
+            return NotFound(ex.Message);
         }
         catch (Exception ex)
         {
