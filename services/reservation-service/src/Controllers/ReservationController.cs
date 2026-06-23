@@ -19,31 +19,8 @@ public class ReservationController(IReservationService reservationService) : Con
     [EndpointDescription("Reserve a seat for a specific showtime")]
     public async Task<IActionResult> ReserveSeatAsync(CreateReservationRequestDto reservationDtoFromRequest, CancellationToken ct)
     {
-        try
-        {
-            await reservationService.AddNewReservationAsync(reservationDtoFromRequest, ct);
+        await reservationService.AddNewReservationAsync(reservationDtoFromRequest, ct);
 
-            return Created();
-        }
-
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-
-        catch (InvalidOperationException ex) when (ex.Message.Contains("Reservation Conflict."))
-        {
-            return Conflict(ex.Message);
-        }
-
-        catch (InvalidOperationException ex)
-        {
-            return StatusCode(500, ex.Message);
-        }
-
-        catch (Exception ex)
-        {
-            return StatusCode(500, ex.Message);
-        }
+        return Created();
     }
 }

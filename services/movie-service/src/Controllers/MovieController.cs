@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using movie_service.Filters;
+using movie_service.Models;
 using movie_service.RequestDTOs;
 using movie_service.ResponseDTOs;
 using movie_service.Services.Interfaces;
@@ -34,7 +35,11 @@ public class MovieController(IMovieService movieService, IValidator<CreateMovieR
             return Ok(movies);
         }
 
-        return BadRequest("Unsupported status for movies retrieval. Allowed values are: 'now-showing'.");
+        return BadRequest(new ProblemDetails
+        {
+            Title = "Unsupported status for movies retrieval.",
+            Detail = "It only can be 'now-showing' or empty"
+        });
     }
 
 
@@ -50,7 +55,11 @@ public class MovieController(IMovieService movieService, IValidator<CreateMovieR
 
         if (movie is null)
         {
-            return NotFound($"Movie with ID: {movieId} is not found.");
+            return NotFound(new ProblemDetails
+            {
+                Title = "Movie is not found.",
+                Detail = $"Movie with ID: {movieId} is not found."
+            });
         }
 
         return Ok(movie);
@@ -73,19 +82,31 @@ public class MovieController(IMovieService movieService, IValidator<CreateMovieR
 
         if (!validationResult.IsValid)
         {
-            return BadRequest(validationResult.Errors.Select(e => e.ErrorMessage));
+            return BadRequest(new ProblemDetails
+                {
+                    Title = "Invalid input",
+                    Detail = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage))
+                });
         }
 
         if (await movieService.ExistsByNameAsync(movieFromRequest.MovieName, ct))
         {
-            return Conflict($"Movie with name '{movieFromRequest.MovieName}' already exists.");
+            return Conflict(new ProblemDetails
+            {
+                Title = "Conflict in movies names",
+                Detail = $"Movie with name '{movieFromRequest.MovieName}' already exists."
+            });
         }
 
         var newMovieId = await movieService.AddNewMovieAsync(movieFromRequest, ct);
 
         if (newMovieId is null)
         {
-            return StatusCode(500, "Error while saving movie.");
+            return StatusCode(500, new ProblemDetails
+            {
+                Title = "Internal Server Error",
+                Detail = "Error while saving the new movie in database"
+            });
         }
 
         return CreatedAtRoute(routeName: nameof(GetMovieByIdAsync), routeValues: new { movieId = newMovieId }, value: await movieService.GetMovieByIdAsync((Guid)newMovieId, ct));
@@ -103,23 +124,9 @@ public class MovieController(IMovieService movieService, IValidator<CreateMovieR
     [EndpointDescription("Edits movie's data")]
     public async Task<IActionResult> UpdateMovieAsync(Guid movieId, UpdateMovieRequestDto movieFromRequest, CancellationToken ct)
     {
-        try
-        {
-            await movieService.UpdateMovieAsync(movieId, movieFromRequest, ct);
+        await movieService.UpdateMovieAsync(movieId, movieFromRequest, ct);
 
-            return NoContent();
-        }
-
-        catch(KeyNotFoundException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-
-        catch
-        {
-            return StatusCode(500, "Unexpected error while updating the movie.");
-        }
-
+        return NoContent();
     }
 
 
@@ -133,19 +140,8 @@ public class MovieController(IMovieService movieService, IValidator<CreateMovieR
     [EndpointDescription("Deletes a movie from the cinema's database")]
     public async Task<IActionResult> DeleteMovieAsync(Guid movieId, CancellationToken ct)
     {
-        try
-        {
-            await movieService.DeleteMovieAsync(movieId, ct);
+        await movieService.DeleteMovieAsync(movieId, ct);
 
-            return NoContent();
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Error while deleting the movie. {ex.Message}");
-        }
+        return NoContent();
     }
 }

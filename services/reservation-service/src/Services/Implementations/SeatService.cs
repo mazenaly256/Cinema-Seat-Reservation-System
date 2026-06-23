@@ -34,7 +34,7 @@ public class SeatService(ApplicationDbContext context, ILogger<SeatService> logg
             }
 
             logger.LogWarning("Error in retrieving showtime data from Movie Service. Movie Service returns {MovieServiceResponseStatusCode}", response.StatusCode);
-            throw new Exception("Failed to retrieve showtime data.");
+            throw new Exception();
         }
 
         var reservedSeats = context.Reservations.Where(r => r.ShowtimeId == showtimeId).Select(r => r.SeatNumber);

@@ -7,6 +7,7 @@ services:
     build:
       context: .
       dockerfile: movie-service/src/Dockerfile
+    image: ghcr.io/mazenaly256/csrs-movie
     environment:
       - ASPNETCORE_ENVIRONMENT=${ENV}
       - ASPNETCORE_URLS=http://+:8080
@@ -31,6 +32,7 @@ services:
     build:
       context: .
       dockerfile: reservation-service/src/Dockerfile
+    image: ghcr.io/mazenaly256/csrs-reservation
     environment:
       - ASPNETCORE_ENVIRONMENT=${ENV}
       - ASPNETCORE_URLS=http://+:8080
@@ -58,6 +60,7 @@ services:
     build:
       context: .
       dockerfile: api-gateway-service/src/Dockerfile
+    image: ghcr.io/mazenaly256/csrs-api-gateway
     ports:
       - 5241:8080
     environment:
@@ -89,6 +92,7 @@ services:
     build:
       context: .
       dockerfile: identity-service/src/Dockerfile
+    image: ghcr.io/mazenaly256/csrs-identity
     ports:
       - 5089:8080
     environment:
