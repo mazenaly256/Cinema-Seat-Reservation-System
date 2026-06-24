@@ -8,6 +8,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ENV}
       - ASPNETCORE_URLS=http://+:8080
+      - API_Gateway_URL=${API_GATEWAY_URL}
       - ConnectionStrings__Default=${MOVIE_SERVICE_DATABASE_CONNECTION_STRING}
       - OpenTelemetryExporter__TracingDestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_TRACING_DESTINATION_ENDPOINT}
       - OpenTelemetryExporter__LoggingDestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_LOGGING_DESTINATION_ENDPOINT}
@@ -30,6 +31,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ENV}
       - ASPNETCORE_URLS=http://+:8080
+      - API_Gateway_URL=${API_GATEWAY_URL}
       - movieServiceBaseUrl=http://movie:8080
       - ConnectionStrings__Default=${RESERVATION_SERVICE_DATABASE_CONNECTION_STRING}
       - OpenTelemetryExporter__TracingDestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_TRACING_DESTINATION_ENDPOINT}

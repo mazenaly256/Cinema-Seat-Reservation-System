@@ -1,118 +1,24 @@
-networks:
-  cinema-reservation-system-network:
-    driver: bridge
-
 services:
   movie:
     build:
       context: .
       dockerfile: movie-service/src/Dockerfile
     image: ghcr.io/mazenaly256/csrs-movie
-    environment:
-      - ASPNETCORE_ENVIRONMENT=${ENV}
-      - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__Default=${MOVIE_SERVICE_DATABASE_CONNECTION_STRING}
-      - OpenTelemetryExporter__TracingDestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_TRACING_DESTINATION_ENDPOINT}
-      - OpenTelemetryExporter__LoggingDestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_LOGGING_DESTINATION_ENDPOINT}
-      - OpenTelemetryExporter__MetricsDestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_METRICS_DESTINATION_ENDPOINT}
-      - OpenTelemetryExporter__CloudInstanceID=${CLOUD_INSTANCE_ID}
-      - OpenTelemetryExporter__CloudInstanceApiToken=${CLOUD_INSTANCE_API_TOKEN}
-      - Logging__LogLevel__Default=Information
-      - Logging__LogLevel__Microsoft=Warning
-      - Logging__LogLevel__System=Warning
-    networks:
-      - cinema-reservation-system-network
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 256M
 
   reservation:
     build:
       context: .
       dockerfile: reservation-service/src/Dockerfile
     image: ghcr.io/mazenaly256/csrs-reservation
-    environment:
-      - ASPNETCORE_ENVIRONMENT=${ENV}
-      - ASPNETCORE_URLS=http://+:8080
-      - movieServiceBaseUrl=http://movie:8080
-      - ConnectionStrings__Default=${RESERVATION_SERVICE_DATABASE_CONNECTION_STRING}
-      - OpenTelemetryExporter__TracingDestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_TRACING_DESTINATION_ENDPOINT}
-      - OpenTelemetryExporter__LoggingDestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_LOGGING_DESTINATION_ENDPOINT}
-      - OpenTelemetryExporter__MetricsDestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_METRICS_DESTINATION_ENDPOINT}
-      - OpenTelemetryExporter__CloudInstanceID=${CLOUD_INSTANCE_ID}
-      - OpenTelemetryExporter__CloudInstanceApiToken=${CLOUD_INSTANCE_API_TOKEN}
-      - Logging__LogLevel__Default=Information
-      - Logging__LogLevel__Microsoft=Warning
-      - Logging__LogLevel__System=Warning
-    depends_on:
-      - movie
-    networks:
-      - cinema-reservation-system-network
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 256M
 
   api-gateway:
     build:
       context: .
       dockerfile: api-gateway-service/src/Dockerfile
     image: ghcr.io/mazenaly256/csrs-api-gateway
-    ports:
-      - 5241:8080
-    environment:
-      - ASPNETCORE_ENVIRONMENT=${ENV}
-      - ASPNETCORE_URLS=http://+:8080
-      - ReverseProxy__Clusters__movie-cluster__Destinations__destination1__Address=http://movie:8080
-      - ReverseProxy__Clusters__reservation-cluster__Destinations__destination1__Address=http://reservation:8080
-      - JwtSettings__SecretKey=${JWT_SECRET_KEY}
-      - OpenTelemetryExporter__TracingDestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_TRACING_DESTINATION_ENDPOINT}
-      - OpenTelemetryExporter__LoggingDestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_LOGGING_DESTINATION_ENDPOINT}
-      - OpenTelemetryExporter__MetricsDestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_METRICS_DESTINATION_ENDPOINT}
-      - OpenTelemetryExporter__CloudInstanceID=${CLOUD_INSTANCE_ID}
-      - OpenTelemetryExporter__CloudInstanceApiToken=${CLOUD_INSTANCE_API_TOKEN}
-      - Logging__LogLevel__Default=Information
-      - Logging__LogLevel__Microsoft=Warning
-      - Logging__LogLevel__System=Warning
-    depends_on:
-      - movie
-      - reservation
-    networks:
-      - cinema-reservation-system-network
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 256M
 
   identity:
     build:
       context: .
       dockerfile: identity-service/src/Dockerfile
     image: ghcr.io/mazenaly256/csrs-identity
-    ports:
-      - 5089:8080
-    environment:
-      - ASPNETCORE_ENVIRONMENT=${ENV}
-      - ASPNETCORE_URLS=http://+:8080
-      - MongoDbSettings__ConnectionString=${IDENTITY_SERVICE_MONGO_DATABASE_CONNECTION_STRING}
-      - MongoDbSettings__DatabaseName=identity_db
-      - JwtSettings__SecretKey=${JWT_SECRET_KEY}
-      - OpenTelemetryExporter__TracingDestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_TRACING_DESTINATION_ENDPOINT}
-      - OpenTelemetryExporter__LoggingDestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_LOGGING_DESTINATION_ENDPOINT}
-      - OpenTelemetryExporter__MetricsDestinationEndpoint=${OPEN_TELEMETRY_EXPORTER_METRICS_DESTINATION_ENDPOINT}
-      - OpenTelemetryExporter__CloudInstanceID=${CLOUD_INSTANCE_ID}
-      - OpenTelemetryExporter__CloudInstanceApiToken=${CLOUD_INSTANCE_API_TOKEN}
-      - Logging__LogLevel__Default=Information
-      - Logging__LogLevel__Microsoft=Warning
-      - Logging__LogLevel__System=Warning
-    networks:
-      - cinema-reservation-system-network
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 256M
