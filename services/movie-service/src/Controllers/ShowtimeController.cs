@@ -19,8 +19,8 @@ public class ShowtimeController(IShowtimeService showtimeService, IValidator<Cre
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [EndpointName("Get All Showtimes")]
-    [EndpointDescription("Fetch all showtimes filtered according to specific criteria.")]
-    public IActionResult GetShowtimes(Guid? movieId, DateTime? from, DateTime? to, string? status)
+    [EndpointDescription("Fetch all showtimes filtered according to specific criteria, by default it returns the first 10 items if not otherwise is requested.")]
+    public IActionResult GetShowtimes(Guid? movieId, DateTime? from, DateTime? to, string? status, int pageNumber = 1, int pageSize = 10)
     {
         if (status is not null && status != "upcoming")
         {

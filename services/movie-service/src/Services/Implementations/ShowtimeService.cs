@@ -9,7 +9,7 @@ namespace movie_service.Services.Implementations;
 
 public class ShowtimeService(ApplicationDbContext context, ILogger<ShowtimeService> logger) : IShowtimeService
 {
-    public IEnumerable<ShowtimeResponseDto> GetShowtimes(Guid? movieId, DateTime? from, DateTime? to, string? status)
+    public IEnumerable<ShowtimeResponseDto> GetShowtimes(Guid? movieId, DateTime? from, DateTime? to, string? status, int pageNumber = 1, int pageSize = 10)
     {
         IQueryable<Showtime> showtimes = context.Showtimes.Include(st => st.Movie);
 
@@ -32,6 +32,10 @@ public class ShowtimeService(ApplicationDbContext context, ILogger<ShowtimeServi
         {
             showtimes = showtimes.Where(st => st.StartTime <= to);
         }
+
+        showtimes = showtimes.OrderBy(st => st.StartTime)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize);
 
         return showtimes.Select(ShowtimeResponseDto.FromModel);
     }
