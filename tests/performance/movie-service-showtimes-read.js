@@ -3,7 +3,7 @@ import { sleep, check } from "k6";
 
 const BASE_URL = "http://172.209.217.168:5241";
 const TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmExMjkyZDU4OTFkNWJlMTk1MjJjYjNmIiwidXNlcl9uYW1lIjoiQWRtaW4gTm8uMSIsInJvbGUiOiJBZG1pbiIsIm5iZiI6MTc4MjMwMjUzNiwiZXhwIjoxNzgyMzAyODM2LCJpYXQiOjE3ODIzMDI1MzYsImlzcyI6IkNTUlMiLCJhdWQiOiJDU1JTIn0.f_WMuPgU-EEwTHepDo88pIYaW2VpeirvuQMgCHFMnzo";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmExMjkyZDU4OTFkNWJlMTk1MjJjYjNmIiwidXNlcl9uYW1lIjoiQWRtaW4gTm8uMSIsInJvbGUiOiJBZG1pbiIsIm5iZiI6MTc4MjMwNDg1OSwiZXhwIjoxNzgyMzA1MTU5LCJpYXQiOjE3ODIzMDQ4NTksImlzcyI6IkNTUlMiLCJhdWQiOiJDU1JTIn0.K76lJp1aecGvt4IwwwQ5mGRztNVaW6CtKVv1fltq9K8";
 const headers = { Authorization: `Bearer ${TOKEN}` };
 
 export const options = {

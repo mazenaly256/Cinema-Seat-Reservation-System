@@ -10,7 +10,7 @@ Accepted
 
 ## Context
 
-After we reached the production-level product, including all main features, the system is tested to know its bottlenecks, load testing via k6 under 50 concurrent users revealed that `GET /api/showtimes?from=...&to=...` had a P95 latency of \~850ms with a minimum of \~470ms per every single request. The minimum latency represents the fixed network round trip between the Azure VM (South Africa) and the Neon PostgreSQL instance (EU Central, Frankfurt), assuming that the code is very efficient.
+After we reached the production-level product, including all main features, the system is tested to know its bottlenecks, load testing via k6 under 50 concurrent users revealed that `GET /api/showtimes?from=...&to=...` had a P95 latency of \~850ms with a minimum of \~470ms per every single request. The minimum latency represents the fixed network round trip between the Azure VM (South Africa) and the Neon PostgreSQL instance (EU Central, Frankfurt) _that transmits the whole requested data without pagination_, assuming that the code is very efficient.
 Testing script can be found at `~/tests/performance/movie-service-showtimes-read.js`.
 
 Database indexes were added on `StartTime` column. EXPLAIN ANALYZE on PostgreSQL confirmed that the query planner adopted the indexing. However, no measurable latency improvement was observed — at 10,000 rows, the sequential scan is fast enough that the index benefit is smaller than measurement noise. The bottleneck is not query performance, it is network latency to the remote database.
