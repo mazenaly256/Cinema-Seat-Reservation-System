@@ -1,4 +1,7 @@
 using identity_service;
+using identity_service.Custom_Exceptions;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 using OpenTelemetry.Exporter;
@@ -73,6 +76,40 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<AuthenticationService>();
 
 var app = builder.Build();
+
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var ex = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+
+        context.Response.ContentType = "application/problem+json";
+
+        var status = ex switch
+        {
+            InvalidCredentialsException => 400,
+            _ => 500
+        };
+
+        context.Response.StatusCode = status;
+
+        await context.Response.WriteAsJsonAsync(new ProblemDetails
+        {
+            Status = status,
+            Title = ex switch
+            {
+                InvalidCredentialsException => "Invalid credentials",
+                _ => "Internal Server Error"
+            },
+
+            Detail = ex switch
+            {
+                InvalidCredentialsException => "Incorrect Email or Password, they are not registered.",
+                _ => "An error occurred while processing your request."
+            }
+        });
+    });
+});
 
 app.MapControllers();
 

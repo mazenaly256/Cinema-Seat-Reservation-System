@@ -16,36 +16,18 @@ public class SeatController(ISeatService seatService) : ControllerBase
     [EndpointDescription("Gets available or non available seats")]
     public async Task<ActionResult<IEnumerable<string>>> GetSeatsAsync([Required] Guid showtimeId, [Required] bool available, CancellationToken ct)
     {
-        try
+        if (available)
         {
-            if (available)
-            {
-                var availableSeats = await seatService.GetAvailableSeatsAsync(showtimeId, ct);
+            var availableSeats = await seatService.GetAvailableSeatsAsync(showtimeId, ct);
 
-                return Ok(availableSeats);
-            }
-
-            else
-            {
-                var unavailableSeats = await seatService.GetReservedAndLockedSeatsAsync(showtimeId, ct);
-
-                return Ok(unavailableSeats);
-            }
+            return Ok(availableSeats);
         }
 
-        catch (ArgumentException ex)
+        else
         {
-            return BadRequest(ex.Message);
-        }
+            var unavailableSeats = await seatService.GetReservedAndLockedSeatsAsync(showtimeId, ct);
 
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
-
-        catch (Exception ex)
-        {
-            return StatusCode(500, ex.Message);
+            return Ok(unavailableSeats);
         }
     }
 }

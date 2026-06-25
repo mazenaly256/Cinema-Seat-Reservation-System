@@ -1,4 +1,6 @@
 using FluentValidation;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using movie_service.Data;
@@ -114,6 +116,43 @@ builder.Services.AddOpenApi(options =>
 });
 
 var app = builder.Build();
+
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var ex = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+
+        context.Response.ContentType = "application/problem+json";
+
+        var status = ex switch
+        {
+            KeyNotFoundException => 404,
+            ArgumentException => 400,
+            _ => 500
+        };
+
+        context.Response.StatusCode = status;
+
+        await context.Response.WriteAsJsonAsync(new ProblemDetails
+        {
+            Status = status,
+            Title = ex switch
+            {
+                KeyNotFoundException => "Resource ID does not exist",
+                ArgumentException => "Invalid Data.",
+                _ => "Internal Server Error"
+            },
+
+            Detail = ex switch
+            {
+                KeyNotFoundException => ex.Message,
+                ArgumentException => ex.Message,
+                _ => "An error occurred while processing your request."
+            }
+        });
+    });
+});
 
 app.MapControllers();
 

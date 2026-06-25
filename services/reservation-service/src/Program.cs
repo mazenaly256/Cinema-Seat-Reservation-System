@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using OpenTelemetry.Exporter;
@@ -7,9 +9,11 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Polly;
 using Polly.Extensions.Http;
+using reservation_service.Custom_Exceptions;
 using reservation_service.Data;
 using reservation_service.Services.Implementations;
 using reservation_service.Services.Interfaces;
+using System.Security.Authentication;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -119,6 +123,46 @@ builder.Services.AddHttpClient("movie-service", client =>
         .CircuitBreakerAsync(3, TimeSpan.FromSeconds(20)));
 
 var app = builder.Build();
+
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var ex = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+
+        context.Response.ContentType = "application/problem+json";
+
+        var status = ex switch
+        {
+            KeyNotFoundException => 404,
+            ArgumentException => 400,
+            ReservationConflictException => 409,
+            _ => 500
+        };
+
+        context.Response.StatusCode = status;
+
+        await context.Response.WriteAsJsonAsync(new ProblemDetails
+        {
+            Status = status,
+            Title = ex switch
+            {
+                KeyNotFoundException => "Resource ID does not exist",
+                ArgumentException => "Invalid Data.",
+                ReservationConflictException => "Reservation Conflict",
+                _ => "Internal Server Error"
+            },
+
+            Detail = ex switch
+            {
+                KeyNotFoundException => ex.Message,
+                ArgumentException => ex.Message,
+                ReservationConflictException => ex.Message,
+                _ => "An error occurred while processing your request."
+            }
+        });
+    });
+});
 
 app.MapControllers();
 

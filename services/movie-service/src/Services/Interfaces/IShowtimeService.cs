@@ -5,7 +5,7 @@ namespace movie_service.Services.Interfaces;
 
 public interface IShowtimeService
 {
-    IEnumerable<ShowtimeResponseDto> GetShowtimes(Guid? movieId, DateTime? from, DateTime? to,  string? status);
+    IEnumerable<ShowtimeResponseDto> GetShowtimes(Guid? movieId, DateTime? from, DateTime? to,  string? status, int pageNumber = 1, int pageSize = 10);
     
     Task<bool> ExistsByIdAsync(Guid showtimeId, CancellationToken ct);
 

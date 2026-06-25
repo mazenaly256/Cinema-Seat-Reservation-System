@@ -10,15 +10,8 @@ public class JwtTokenController(AuthenticationService authenticationService) : C
     [HttpPost("login")]
     public async Task<ActionResult<string>> GetAccessTokenAsync(IssueJwtTokenRequest request)
     {
-        try
-        {
-            string jwtToken = await authenticationService.IssueJwtTokenAsync(request.Email, request.Password);
+        string jwtToken = await authenticationService.IssueJwtTokenAsync(request.Email, request.Password);
 
-            return jwtToken;
-        }
-        catch(InvalidCredentialsException ex)
-        {
-            return BadRequest($"{ex.Message} User with entered email and password does not exist in DB.");
-        }
+        return jwtToken;
     }
 }

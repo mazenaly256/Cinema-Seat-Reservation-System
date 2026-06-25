@@ -9,7 +9,7 @@ namespace movie_service.Services.Implementations;
 
 public class ShowtimeService(ApplicationDbContext context, ILogger<ShowtimeService> logger) : IShowtimeService
 {
-    public IEnumerable<ShowtimeResponseDto> GetShowtimes(Guid? movieId, DateTime? from, DateTime? to, string? status)
+    public IEnumerable<ShowtimeResponseDto> GetShowtimes(Guid? movieId, DateTime? from, DateTime? to, string? status, int pageNumber = 1, int pageSize = 10)
     {
         IQueryable<Showtime> showtimes = context.Showtimes.Include(st => st.Movie);
 
@@ -32,6 +32,10 @@ public class ShowtimeService(ApplicationDbContext context, ILogger<ShowtimeServi
         {
             showtimes = showtimes.Where(st => st.StartTime <= to);
         }
+
+        showtimes = showtimes.OrderBy(st => st.StartTime)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize);
 
         return showtimes.Select(ShowtimeResponseDto.FromModel);
     }
@@ -99,20 +103,20 @@ public class ShowtimeService(ApplicationDbContext context, ILogger<ShowtimeServi
 
         if (showtimeFromDB is null)
         {
-            throw new InvalidOperationException($"Showtime with ID: {showtimeId} does NOT exist.");
+            throw new KeyNotFoundException($"Showtime with ID: {showtimeId} does NOT exist.");
         }
 
         if (showtimeDtoFromRequest.StartTime is not null && showtimeDtoFromRequest.EndTime is not null)
         {
             if ((Convert.ToDateTime(showtimeDtoFromRequest.EndTime) - Convert.ToDateTime(showtimeDtoFromRequest.StartTime)).TotalMinutes < showtimeFromDB.Movie.DurationMinutes)
             {
-                throw new InvalidOperationException($"The showtime's duration ({(Convert.ToDateTime(showtimeDtoFromRequest.EndTime) - Convert.ToDateTime(showtimeDtoFromRequest.StartTime)).TotalMinutes} minutes) is less than the showing movie duration ({showtimeFromDB.Movie.DurationMinutes} minutes).");
+                throw new ArgumentException($"The showtime's duration ({(Convert.ToDateTime(showtimeDtoFromRequest.EndTime) - Convert.ToDateTime(showtimeDtoFromRequest.StartTime)).TotalMinutes} minutes) is less than the showing movie duration ({showtimeFromDB.Movie.DurationMinutes} minutes).");
             }
         }
 
         if (showtimeDtoFromRequest.StartTime is not null && showtimeDtoFromRequest.StartTime <= DateTime.UtcNow)
         {
-            throw new InvalidOperationException($"Can not make showtime's start date in the past.");
+            throw new ArgumentException($"Can not make showtime's start date in the past.");
         }
 
 

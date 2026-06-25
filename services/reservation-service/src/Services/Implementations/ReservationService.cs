@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileSystemGlobbing.Internal;
+using reservation_service.Custom_Exceptions;
 using reservation_service.Data;
 using reservation_service.IntegrationDTOs.MovieService;
 using reservation_service.Models;
@@ -16,7 +17,7 @@ public class ReservationService(ApplicationDbContext context, ILogger<Reservatio
     {
         if (await context.Reservations.AnyAsync(r => r.ShowtimeId == reservationDtoFromRequest.ShowtimeId && r.SeatNumber == reservationDtoFromRequest.SeatNumber))
         {
-            throw new InvalidOperationException("Reservation Conflict. The seat is already successfully reserved with a confirmed payment."); ;
+            throw new ReservationConflictException("The seat is already successfully reserved with a confirmed payment."); ;
         }
 
         if (!Regex.IsMatch(reservationDtoFromRequest.SeatNumber, @"^[A-D][1-4]$"))
@@ -52,7 +53,7 @@ public class ReservationService(ApplicationDbContext context, ILogger<Reservatio
             else
             {
                 logger.LogWarning("Error in checking showtime existence through HTTP HEAD Request to Movie Service. Movie Service Returns {MovieServiceResponseStatusCode}", response.StatusCode);
-                throw new Exception("Failed to retrieve the showtime data.");
+                throw new Exception();
             }
         }
 
@@ -60,6 +61,7 @@ public class ReservationService(ApplicationDbContext context, ILogger<Reservatio
 
         try
         {
+            #region Seat Temporary Locking
             context.SeatHolds.RemoveRange(context.SeatHolds.Where(sh => sh.HeldUntil <= DateTime.UtcNow));
             await context.SaveChangesAsync(ct);
 
@@ -74,11 +76,12 @@ public class ReservationService(ApplicationDbContext context, ILogger<Reservatio
             // checks if the seat has been reserved by another thread (another request)
             if (await context.Reservations.AnyAsync(r => r.ShowtimeId == reservationDtoFromRequest.ShowtimeId && r.SeatNumber == reservationDtoFromRequest.SeatNumber))
             {
-                throw new InvalidOperationException("Reservation Conflict. The seat is already successfully reserved with a confirmed payment."); ;
+                throw new ReservationConflictException("The seat is already successfully reserved with a confirmed payment."); ;
             }
 
             await context.SeatHolds.AddAsync(seatTemporaryLock, ct);
             await context.SaveChangesAsync(ct);
+            #endregion
 
 
 
@@ -107,13 +110,13 @@ public class ReservationService(ApplicationDbContext context, ILogger<Reservatio
             {
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    throw new ArgumentException("No upcoming showtime with the sent ID");
+                    throw new ArgumentException($"No upcoming showtime with ID: {reservationDtoFromRequest.ShowtimeId}");
                 }
 
                 else
                 {
                     logger.LogError("Unable to retrieve showtime data from Movie Service. Movie Service responds with {MovieServiceResponseStatusCode} Status Code", response.StatusCode);
-                    throw new InvalidOperationException("Failed to retrieve the showtime data.");
+                    throw new Exception("Failed to retrieve the showtime data.");
                 }
             }
 
@@ -121,9 +124,9 @@ public class ReservationService(ApplicationDbContext context, ILogger<Reservatio
 
             if (showtime is null)
             {
-                logger.LogError("Entity mapping between services failed, Retrieved showtime data from Movie Service is incompatible with the ShowtimeIntegrationDto defined in Reservation Service");
+                logger.LogError("Error while deserializing retrieved showtime data. Retrieved showtime data from Movie Service is incompatible with the ShowtimeIntegrationDto defined in Reservation Service");
 
-                throw new InvalidOperationException("Error while deserializing retrieved showtime data.");
+                throw new Exception();
             }
 
             var mockPayment = new Payment { PaidAmount = showtime!.Price, PaidAt = DateTime.UtcNow };
@@ -154,12 +157,7 @@ public class ReservationService(ApplicationDbContext context, ILogger<Reservatio
         {
             logger.LogInformation(ex, "Race condition has been resolved successfully. Concurrent reservation has been handled correctly");
             
-            throw new InvalidOperationException($"Reservation Conflict. The seat is locked right now, try again after a while or choose another seat.");
-        }
-
-        catch (InvalidOperationException)
-        {
-            throw;
+            throw new ReservationConflictException($"The seat is locked right now, try again after a while or choose another seat.");
         }
 
         catch (Exception ex)
