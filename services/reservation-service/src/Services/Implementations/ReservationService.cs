@@ -7,6 +7,7 @@ using reservation_service.Models;
 using reservation_service.RequestDTOs;
 using reservation_service.Services.Interfaces;
 using System.Data.Common;
+using System.Net;
 using System.Text.RegularExpressions;
 
 namespace reservation_service.Services.Implementations;
@@ -26,14 +27,18 @@ public class ReservationService(ApplicationDbContext context, ILogger<Reservatio
         }
 
         string showtimeUrl = $"api/showtimes/{reservationDtoFromRequest.ShowtimeId}";
-        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, showtimeUrl);
-        HttpResponseMessage response;
+        using var request = new HttpRequestMessage(HttpMethod.Head, showtimeUrl);
 
         var movieServiceHttpClient = httpClientFactory.CreateClient("movie-service");
 
+        bool isSuccessStatusCodeHeadRequest;
+        HttpStatusCode responseStatusCodeHeadRequest;
+
         try
         {
-            response = await movieServiceHttpClient.SendAsync(request, ct);
+            var response = await movieServiceHttpClient.SendAsync(request, ct);
+            isSuccessStatusCodeHeadRequest = response.IsSuccessStatusCode;
+            responseStatusCodeHeadRequest = response.StatusCode;
         }
 
         catch (Exception ex)
@@ -43,16 +48,16 @@ public class ReservationService(ApplicationDbContext context, ILogger<Reservatio
             throw;
         }
 
-        if (!response.IsSuccessStatusCode)
+        if (!isSuccessStatusCodeHeadRequest)
         {
-            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            if (responseStatusCodeHeadRequest == HttpStatusCode.NotFound)
             {
                 throw new ArgumentException($"No upcoming showtime with the ID: {reservationDtoFromRequest.ShowtimeId}");
             }
 
             else
             {
-                logger.LogWarning("Error in checking showtime existence through HTTP HEAD Request to Movie Service. Movie Service Returns {MovieServiceResponseStatusCode}", response.StatusCode);
+                logger.LogWarning("Error in checking showtime existence through HTTP HEAD Request to Movie Service. Movie Service Returns {MovieServiceResponseStatusCode}", responseStatusCodeHeadRequest);
                 throw new Exception();
             }
         }
@@ -94,9 +99,15 @@ public class ReservationService(ApplicationDbContext context, ILogger<Reservatio
 
             ShowtimeIntegrationDto? showtime;
 
+            bool isSuccessStatusCodeGetRequest;
+            HttpStatusCode responseStatusCodeGetRequest;
+
             try
             {
-                response = await movieServiceHttpClient.GetAsync(showtimeUrl, ct);
+                using var response = await movieServiceHttpClient.GetAsync(showtimeUrl, ct);
+                isSuccessStatusCodeGetRequest = response.IsSuccessStatusCode;
+                responseStatusCodeGetRequest = response.StatusCode;
+                showtime = await response.Content.ReadFromJsonAsync<ShowtimeIntegrationDto>(ct);
             }
 
             catch (Exception ex)
@@ -106,21 +117,19 @@ public class ReservationService(ApplicationDbContext context, ILogger<Reservatio
                 throw;
             }
 
-            if (!response.IsSuccessStatusCode)
+            if (!isSuccessStatusCodeGetRequest)
             {
-                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                if (responseStatusCodeGetRequest == HttpStatusCode.NotFound)
                 {
                     throw new ArgumentException($"No upcoming showtime with ID: {reservationDtoFromRequest.ShowtimeId}");
                 }
 
                 else
                 {
-                    logger.LogError("Unable to retrieve showtime data from Movie Service. Movie Service responds with {MovieServiceResponseStatusCode} Status Code", response.StatusCode);
+                    logger.LogError("Unable to retrieve showtime data from Movie Service. Movie Service responds with {MovieServiceResponseStatusCode} Status Code", responseStatusCodeGetRequest);
                     throw new Exception("Failed to retrieve the showtime data.");
                 }
             }
-
-            showtime = await response.Content.ReadFromJsonAsync<ShowtimeIntegrationDto>(ct);
 
             if (showtime is null)
             {

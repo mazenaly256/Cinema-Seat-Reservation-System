@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using reservation_service.Data;
 using reservation_service.Services.Interfaces;
+using System.Net;
 
 namespace reservation_service.Services.Implementations;
 
@@ -9,14 +10,18 @@ public class SeatService(ApplicationDbContext context, ILogger<SeatService> logg
     public async Task<HashSet<string>> GetReservedAndLockedSeatsAsync(Guid showtimeId, CancellationToken ct)
     {
         string showtimeUrl = $"api/showtimes/{showtimeId}";
-        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, showtimeUrl);
+        using var request = new HttpRequestMessage(HttpMethod.Head, showtimeUrl);
 
         var movieServiceHttpClient = httpClientFactory.CreateClient("movie-service");
-        HttpResponseMessage response;
+
+        bool isSuccessStatusCode;
+        HttpStatusCode responseStatusCode;
 
         try
         {
-            response = await movieServiceHttpClient.SendAsync(request, ct);
+            var response = await movieServiceHttpClient.SendAsync(request, ct);
+            isSuccessStatusCode = response.IsSuccessStatusCode;
+            responseStatusCode = response.StatusCode;
         }
 
         catch (Exception ex)
@@ -26,14 +31,14 @@ public class SeatService(ApplicationDbContext context, ILogger<SeatService> logg
             throw;
         }
 
-        if (!response.IsSuccessStatusCode)
+        if (!isSuccessStatusCode)
         {
-            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            if (responseStatusCode == HttpStatusCode.NotFound)
             {
                 throw new KeyNotFoundException($"No showtime with the ID: {showtimeId}");
             }
 
-            logger.LogWarning("Error in retrieving showtime data from Movie Service. Movie Service returns {MovieServiceResponseStatusCode}", response.StatusCode);
+            logger.LogWarning("Error in retrieving showtime data from Movie Service. Movie Service returns {MovieServiceResponseStatusCode}", responseStatusCode);
             throw new Exception();
         }
 
